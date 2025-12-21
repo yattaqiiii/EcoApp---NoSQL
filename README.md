@@ -10,53 +10,60 @@ Aplikasi web untuk mengidentifikasi dan mengklasifikasikan jenis sampah mengguna
 - ✅ **Detail Prediksi**: Tampilan confidence score dan breakdown semua kategori
 - ✅ **Responsive Design**: Tampilan optimal di desktop dan mobile
 
-## 🚀 Quick Start
+## � Struktur Project
 
-### 1. Install Dependencies
-
-```bash
-cd Frontend
-npm install
+```
+EcoScanFPMIPA/
+├── Project/              # React + Vite Web Application
+│   ├── src/
+│   │   ├── pages/        # Home, Scan, Result, About, Welcome
+│   │   ├── components/   # Navbar
+│   │   ├── utils/        # Model AI utilities
+│   │   └── assets/       # Images, icons
+│   ├── public/           # Static files & AI model
+│   └── package.json
+├── GETTING_STARTED.md    # 📖 Panduan lengkap setup dari awal
+└── README.md             # File ini
 ```
 
-### 2. Setup Model AI
-
-Anda memiliki 2 opsi untuk setup model:
-
-#### **Opsi A: Gunakan Teachable Machine Cloud URL (RECOMMENDED)**
-
-1. Buka project Teachable Machine Anda
-2. Klik "Export Model" → "Upload (Shareable Link)"
-3. Copy URL yang diberikan
-4. Edit `Frontend/src/utils/modelUtils.js` dan ganti dengan kode dari `modelUtils.teachablemachine.js`
-5. Update variable `MODEL_URL` dengan URL Anda
-
-#### **Opsi B: Export TensorFlow.js Lokal**
-
-1. Di Teachable Machine, klik "Export Model"
-2. Pilih tab "TensorFlow.js"
-3. Klik "Download"
-4. Extract file .zip
-5. Copy semua file ke `Frontend/public/model/`
-6. Edit `MODEL_URL` di `modelUtils.js` menjadi `/model/model.json`
-
-> 📖 Lihat [Frontend/MODEL_SETUP.md](Frontend/MODEL_SETUP.md) untuk panduan lengkap
-
-### 3. Jalankan Development Server
+## 🚀 Quick Start
 
 ```bash
-cd Frontend
+cd Project
+npm install
 npm run dev
 ```
 
 Buka browser ke http://localhost:5173
 
-### 4. Test Aplikasi
+> 📖 **Panduan Lengkap**: Lihat [GETTING_STARTED.md](GETTING_STARTED.md) untuk setup detail dari awal sampai selesai
 
-1. Navigasi ke halaman "Scan"
-2. Upload foto sampah atau ambil foto
+## ⚙️ Setup Model AI
+
+**PENTING**: File `model_unquant.tflite` tidak bisa digunakan di browser. Export model dalam format **TensorFlow.js**.
+
+### Opsi 1: Cloud URL (Recommended)
+
+1. Buka Teachable Machine project
+2. Export Model → Upload (Shareable Link)
+3. Copy URL
+4. Edit `Project/src/utils/modelUtils.js`:
+   ```javascript
+   const MODEL_URL = 'https://teachablemachine.withgoogle.com/models/YOUR_ID/';
+   ```
+
+### Opsi 2: Local Download
+
+1. Export Model → TensorFlow.js → Download
+2. Extract dan copy file ke `Project/public/model/`
+3. Update `MODEL_URL = '/model/'`
+
+## 🧪 Testing
+
+1. Buka http://localhost:5173
+2. Klik "Scan" → Upload foto sampah
 3. Klik "Scan Sekarang"
-4. Lihat hasil prediksi dan panduan pembuangan
+4. Lihat hasil dan panduan pembuangan
 
 ## 📊 Kategori Sampah
 
@@ -68,31 +75,25 @@ Buka browser ke http://localhost:5173
 | 📄 Kertas                 | Kertas dan karton            | Coklat  |
 | 🗑️ Residu                 | Sampah non-recyclable        | Abu-abu |
 
-## 🔧 Teknologi
+## 🔧 Tech Stack
 
 - **Frontend**: React 19 + Vite
 - **Routing**: React Router DOM v7
-- **AI/ML**: TensorFlow.js
+- **AI/ML**: TensorFlow.js + Teachable Machine
 - **Styling**: CSS Modules
-- **Model**: Teachable Machine (Image Classification)
 
-## 📝 Status Integrasi Model
+## ✅ Status
 
-✅ **Completed:**
+**Sudah Selesai:**
+- ✅ Frontend UI lengkap (5 pages)
+- ✅ TensorFlow.js integration
+- ✅ Image preprocessing & prediction
+- ✅ Error handling
 
-- TensorFlow.js setup
-- Model loading infrastructure
-- Image preprocessing pipeline
-- Prediction pipeline
-- UI integration (Scan + Result page)
-- Label mapping & waste information
-- Error handling
-
-⚠️ **Requires Action:**
-
-- Export model dari Teachable Machine dalam format TensorFlow.js
-- Update MODEL_URL dengan URL yang benar
-- Test dengan real model
+**Yang Perlu Dilakukan:**
+- ⚠️ Export model dari Teachable Machine (format TensorFlow.js)
+- ⚠️ Update `MODEL_URL` di `modelUtils.js`
+- ⚠️ Test dengan real model
 
 ## 👥 Team
 
