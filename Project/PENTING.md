@@ -72,6 +72,7 @@ Menyimpan profil pengguna dan progres XP mereka
 | Field     | Tipe Data | Deskripsi         |
 |`username` | String    | Nama Unik Pengguna|
 |`total_xp` | Number    | Akumulasi XP dari aktivitas scan|
+|`level`    | Number    | Level user bedasarkan total XP|
 |`badges`   | array     | daftar lencana yang didapat|
 
 ## Struktur output statistics (Aggregation)
