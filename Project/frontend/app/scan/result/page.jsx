@@ -12,6 +12,7 @@ import {
   binMatches
 } from '@/utils/locationConfig';
 import Navbar from '@/components/Navbar';
+import { getUser } from '@/utils/authUtils';
 
 export default function Result() {
   const router = useRouter();
@@ -20,10 +21,42 @@ export default function Result() {
   // Get data dari sessionStorage (dari Scan page)
   const [result, setResult] = useState(null);
   
+  // XP & Level state
+  const [xpEarned, setXpEarned] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentXP, setCurrentXP] = useState(0);
+  const [xpToNextLevel, setXpToNextLevel] = useState(100);
+  
   useEffect(() => {
     const storedData = sessionStorage.getItem('scanResult');
     if (storedData) {
-      setResult(JSON.parse(storedData));
+      const parsedData = JSON.parse(storedData);
+      setResult(parsedData);
+      
+      // Calculate XP based on confidence
+      const baseXP = 10;
+      const bonusXP = parsedData.confidence >= 90 ? 5 : 0;
+      const totalXP = baseXP + bonusXP;
+      setXpEarned(totalXP);
+      
+      // Get user data (dummy for now)
+      const user = getUser();
+      if (user) {
+        // Simulate XP and level (dummy data)
+        const newXP = (user.xp || 45) + totalXP;
+        const level = Math.floor(newXP / 100) + 1;
+        const xpInCurrentLevel = newXP % 100;
+        
+        setCurrentLevel(level);
+        setCurrentXP(xpInCurrentLevel);
+        setXpToNextLevel(100);
+        
+        // TODO: Save to backend API
+        // await fetch('/api/user/xp', {
+        //   method: 'POST',
+        //   body: JSON.stringify({ xp: totalXP })
+        // });
+      }
     } else {
       // Redirect ke scan jika tidak ada data
       router.push('/scan');
@@ -97,6 +130,8 @@ export default function Result() {
     return icons[category] || '📦';
   };
 
+  const xpPercentage = (currentXP / xpToNextLevel) * 100;
+
   return (
     <>
       <Navbar />
@@ -112,6 +147,37 @@ export default function Result() {
               <span className="font-semibold">{fakultasLabel}</span>
             </div>
           )}
+        </div>
+
+        {/* XP Notification Card */}
+        <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(102,126,234,0.3)] animate-[slideInDown_0.5s_ease-out]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl animate-[bounce_1s_ease-in-out_3]">
+                ⭐
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xl m-0">Scan Berhasil!</h3>
+                <p className="text-white/90 text-sm m-0">Kamu mendapatkan XP</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-white font-bold text-3xl">+{xpEarned} XP</div>
+              <div className="text-white/80 text-sm">Level {currentLevel}</div>
+            </div>
+          </div>
+          
+          {/* XP Progress Bar */}
+          <div className="bg-white/20 rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+              style={{ width: `${xpPercentage}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between mt-2 text-white/90 text-sm">
+            <span>{currentXP} XP</span>
+            <span>{xpToNextLevel} XP</span>
+          </div>
         </div>
 
         <div className="bg-white rounded-[20px] p-10 shadow-[0_4px_6px_rgba(0,0,0,0.1)]">

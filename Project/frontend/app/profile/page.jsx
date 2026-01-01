@@ -11,14 +11,59 @@ export default function Profile() {
   const router = useRouter();
   const { user: authUser, isLoading: authLoading } = useRequireAuth();
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState('year'); // 'year' or 'month'
 
-  // Dummy statistics
+  // Dummy chart data
+  const chartData = {
+    year: [
+      { label: 'Jan', value: 5 },
+      { label: 'Feb', value: 8 },
+      { label: 'Mar', value: 12 },
+      { label: 'Apr', value: 7 },
+      { label: 'May', value: 15 },
+      { label: 'Jun', value: 10 },
+      { label: 'Jul', value: 18 },
+      { label: 'Aug', value: 14 },
+      { label: 'Sep', value: 20 },
+      { label: 'Oct', value: 16 },
+      { label: 'Nov', value: 22 },
+      { label: 'Dec', value: 24 }
+    ],
+    month: [
+      { label: '1', value: 2 }, { label: '2', value: 1 }, { label: '3', value: 3 },
+      { label: '4', value: 2 }, { label: '5', value: 4 }, { label: '6', value: 3 },
+      { label: '7', value: 5 }, { label: '8', value: 2 }, { label: '9', value: 3 },
+      { label: '10', value: 4 }, { label: '11', value: 2 }, { label: '12', value: 3 },
+      { label: '13', value: 5 }, { label: '14', value: 4 }, { label: '15', value: 6 },
+      { label: '16', value: 3 }, { label: '17', value: 4 }, { label: '18', value: 5 },
+      { label: '19', value: 2 }, { label: '20', value: 3 }, { label: '21', value: 4 },
+      { label: '22', value: 5 }, { label: '23', value: 3 }, { label: '24', value: 4 },
+      { label: '25', value: 6 }, { label: '26', value: 5 }, { label: '27', value: 4 },
+      { label: '28', value: 3 }, { label: '29', value: 2 }, { label: '30', value: 4 }
+    ]
+  };
+
+  // Dummy statistics (will be replaced with API data)
   const dummyStats = {
     totalScans: 24,
     wasteIdentified: 18,
-    pointsEarned: 320,
     level: 5,
+    currentXP: 45,
+    xpToNextLevel: 100,
     lastScan: '2 jam yang lalu',
+    scanStats: {
+      today: 3,
+      thisMonth: 12,
+      thisYear: 24
+    },
+    chartData: chartData, // Add chart data
+    topWasteTypes: [
+      { type: 'Botol Plastik', count: 8, percentage: 33, color: '#ff9800' },
+      { type: 'Kertas Bekas', count: 6, percentage: 25, color: '#8d6e63' },
+      { type: 'Kulit Pisang', count: 4, percentage: 17, color: '#4caf50' }
+    ],
     recentScans: [
       { id: 1, type: 'Botol Plastik', category: 'Plastik', date: '2 jam yang lalu' },
       { id: 2, type: 'Kertas Bekas', category: 'Kertas', date: '1 hari yang lalu' },
@@ -27,10 +72,51 @@ export default function Profile() {
     ]
   };
 
+  // Set user data from auth
   useEffect(() => {
     if (authUser) {
       setUser(authUser);
     }
+  }, [authUser]);
+
+  // Fetch user statistics from backend
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!authUser) return;
+
+      try {
+        setIsLoadingStats(true);
+        
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/user/stats', {
+        //   method: 'GET',
+        //   headers: {
+        //     'Authorization': `Bearer ${authUser.token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
+        // 
+        // if (!response.ok) {
+        //   throw new Error('Failed to fetch statistics');
+        // }
+        // 
+        // const data = await response.json();
+        // setStats(data);
+
+        // Simulate API delay and use dummy data for now
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setStats(dummyStats);
+        
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
+        // Fallback to dummy data on error
+        setStats(dummyStats);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchUserStats();
   }, [authUser]);
 
   const handleLogout = () => {
@@ -44,13 +130,16 @@ export default function Profile() {
     alert('Fitur edit profile akan segera tersedia!');
   };
 
-  if (authLoading) {
+  if (authLoading || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
       </div>
     );
   }
+
+  // Use stats from API or fallback to dummy
+  const displayStats = stats || dummyStats;
 
   return (
     <>
@@ -89,30 +178,49 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+        {/* Level Container - Separated */}
+        <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(102,126,234,0.3)]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                🏆
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xl m-0">Level {displayStats.level}</h3>
+                <p className="text-white/90 text-sm m-0">Progress XP</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-white font-bold text-3xl">{displayStats.currentXP} XP</div>
+              <div className="text-white/80 text-sm">/ {displayStats.xpToNextLevel} XP</div>
+            </div>
+          </div>
+          
+          {/* XP Progress Bar */}
+          <div className="bg-white/20 rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+              style={{ width: `${(displayStats.currentXP / displayStats.xpToNextLevel) * 100}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between mt-2 text-white/90 text-sm">
+            <span>Level {displayStats.level}</span>
+            <span>Level {displayStats.level + 1}</span>
+          </div>
+        </div>
+
+        {/* Statistics Grid - Total Scan & Sampah Teridentifikasi */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <div className="bg-white rounded-2xl p-6 text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-transform duration-300">
             <div className="text-4xl mb-3">🔍</div>
-            <div className="text-3xl font-bold text-[#667eea] mb-1">{dummyStats.totalScans}</div>
+            <div className="text-3xl font-bold text-[#667eea] mb-1">{displayStats.totalScans}</div>
             <div className="text-gray-600 text-sm font-medium">Total Scan</div>
           </div>
           
           <div className="bg-white rounded-2xl p-6 text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-transform duration-300">
             <div className="text-4xl mb-3">♻️</div>
-            <div className="text-3xl font-bold text-[#4caf50] mb-1">{dummyStats.wasteIdentified}</div>
+            <div className="text-3xl font-bold text-[#4caf50] mb-1">{displayStats.wasteIdentified}</div>
             <div className="text-gray-600 text-sm font-medium">Sampah Teridentifikasi</div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-transform duration-300">
-            <div className="text-4xl mb-3">⭐</div>
-            <div className="text-3xl font-bold text-[#ff9800] mb-1">{dummyStats.pointsEarned}</div>
-            <div className="text-gray-600 text-sm font-medium">Poin</div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-transform duration-300">
-            <div className="text-4xl mb-3">🏆</div>
-            <div className="text-3xl font-bold text-[#9c27b0] mb-1">Level {dummyStats.level}</div>
-            <div className="text-gray-600 text-sm font-medium">Pencapaian</div>
           </div>
         </div>
 
@@ -120,11 +228,11 @@ export default function Profile() {
         <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Aktivitas Terakhir</h2>
-            <span className="text-sm text-gray-500">{dummyStats.lastScan}</span>
+            <span className="text-sm text-gray-500">{displayStats.lastScan}</span>
           </div>
 
           <div className="space-y-4">
-            {dummyStats.recentScans.map((scan) => (
+            {displayStats.recentScans.map((scan) => (
               <div 
                 key={scan.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300"
@@ -157,26 +265,175 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Achievements Section (Optional) */}
-        <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)] mt-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Pencapaian</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gradient-to-br from-[#4caf50]/10 to-[#4caf50]/20 rounded-xl">
-              <div className="text-4xl mb-2">🌱</div>
-              <p className="text-sm font-semibold text-gray-700">Pemula</p>
+        {/* Statistics Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          {/* Scan Statistics per Period */}
+          <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Statistik Scan</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                    📅
+                  </div>
+                  <span className="font-semibold text-gray-700">Hari Ini</span>
+                </div>
+                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.today}</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                    📆
+                  </div>
+                  <span className="font-semibold text-gray-700">Bulan Ini</span>
+                </div>
+                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.thisMonth}</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                    🗓️
+                  </div>
+                  <span className="font-semibold text-gray-700">Tahun Ini</span>
+                </div>
+                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.thisYear}</span>
+              </div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-[#2196f3]/10 to-[#2196f3]/20 rounded-xl">
-              <div className="text-4xl mb-2">🔍</div>
-              <p className="text-sm font-semibold text-gray-700">Scanner</p>
+          </div>
+          {/* Top 3 Waste Types */}
+          <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Top 3 Sampah</h2>
+            
+            <div className="space-y-4">
+              {displayStats.topWasteTypes.map((waste, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: waste.color }}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-semibold text-gray-700">{waste.type}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-gray-800">{waste.count}x</span>
+                      <span className="text-sm text-gray-500 ml-2">({waste.percentage}%)</span>
+                    </div>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-1000"
+                      style={{ 
+                        width: `${waste.percentage}%`,
+                        backgroundColor: waste.color
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-[#ff9800]/10 to-[#ff9800]/20 rounded-xl">
-              <div className="text-4xl mb-2">⭐</div>
-              <p className="text-sm font-semibold text-gray-700">Bintang</p>
+          </div>
+        </div>
+
+        {/* Line Chart - Separate Container */}
+        <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)] mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Grafik Scan</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setChartPeriod('month')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  chartPeriod === 'month'
+                    ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Bulanan
+              </button>
+              <button
+                onClick={() => setChartPeriod('year')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  chartPeriod === 'year'
+                    ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Tahunan
+              </button>
             </div>
-            <div className="text-center p-4 bg-gray-100 rounded-xl opacity-50">
-              <div className="text-4xl mb-2">🏆</div>
-              <p className="text-sm font-semibold text-gray-700">Master</p>
+          </div>
+
+          {/* SVG Line Chart */}
+          <div className="relative w-full h-64 bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-xl p-4">
+            <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
+              {/* Grid lines */}
+              <line x1="0" y1="50" x2="800" y2="50" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="0" y1="100" x2="800" y2="100" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="0" y1="150" x2="800" y2="150" stroke="#e5e7eb" strokeWidth="1" />
+
+              {/* Line path */}
+              <polyline
+                fill="none"
+                stroke="url(#lineGradient)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={(() => {
+                  const data = chartData[chartPeriod];
+                  const maxValue = Math.max(...data.map(d => d.value));
+                  const stepX = 800 / (data.length - 1);
+                  return data.map((point, index) => {
+                    const x = index * stepX;
+                    const y = 200 - (point.value / maxValue) * 170 - 10;
+                    return `${x},${y}`;
+                  }).join(' ');
+                })()}
+              />
+
+              {/* Area fill */}
+              <polygon
+                fill="url(#areaGradient)"
+                points={(() => {
+                  const data = chartData[chartPeriod];
+                  const maxValue = Math.max(...data.map(d => d.value));
+                  const stepX = 800 / (data.length - 1);
+                  const points = data.map((point, index) => {
+                    const x = index * stepX;
+                    const y = 200 - (point.value / maxValue) * 170 - 10;
+                    return `${x},${y}`;
+                  });
+                  return `0,200 ${points.join(' ')} 800,200`;
+                })()}
+              />
+
+              {/* Gradients */}
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#667eea" />
+                  <stop offset="100%" stopColor="#764ba2" />
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#667eea" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#764ba2" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* X-axis labels */}
+            <div className="flex justify-between mt-2 text-xs text-gray-500">
+              {chartData[chartPeriod]
+                .filter((_, index) => {
+                  if (chartPeriod === 'year') return true;
+                  return index % 5 === 0 || index === chartData[chartPeriod].length - 1;
+                })
+                .map((point, index) => (
+                  <span key={index}>{point.label}</span>
+                ))}
             </div>
           </div>
         </div>
