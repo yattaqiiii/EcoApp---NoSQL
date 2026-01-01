@@ -1,6 +1,8 @@
-import { useLocation as useRouterLocation, useNavigate } from 'react-router-dom';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useLocation } from '../../context/LocationContext';
+import { useLocation } from '@/context/LocationContext';
 import { 
   FAKULTAS_OPTIONS, 
   mapWasteTypeToBin, 
@@ -8,14 +10,26 @@ import {
   findLocationsWithFallback,
   getFallbackBin,
   binMatches
-} from '../../utils/locationConfig';
+} from '@/utils/locationConfig';
+import Navbar from '@/components/Navbar';
 import './Result.css';
 
-function Result() {
-  const routerLocation = useRouterLocation();
-  const navigate = useNavigate();
-  const result = routerLocation.state;
+export default function Result() {
+  const router = useRouter();
   const { selectedFakultas } = useLocation();
+  
+  // Get data dari sessionStorage (dari Scan page)
+  const [result, setResult] = useState(null);
+  
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('scanResult');
+    if (storedData) {
+      setResult(JSON.parse(storedData));
+    } else {
+      // Redirect ke scan jika tidak ada data
+      router.push('/scan');
+    }
+  }, [router]);
   
   // State untuk accordion (track which fakultas/location is expanded)
   const [expandedFakultas, setExpandedFakultas] = useState({});
@@ -58,12 +72,7 @@ function Result() {
     }));
   };
 
-  useEffect(() => {
-    // Redirect ke scan jika tidak ada data
-    if (!result) {
-      navigate('/scan');
-    }
-  }, [result, navigate]);
+
 
   if (!result) {
     return null;
@@ -92,7 +101,9 @@ function Result() {
   };
 
   return (
-    <div className="result-container">
+    <>
+      <Navbar />
+      <div className="result-container">
       <div className="result-header">
         <h1>Hasil Identifikasi</h1>
         
@@ -400,20 +411,19 @@ function Result() {
         <div className="action-buttons">
           <button 
             className="btn-secondary" 
-            onClick={() => navigate('/home')}
+            onClick={() => router.push('/home')}
           >
             Kembali ke Home
           </button>
           <button 
             className="btn-primary" 
-            onClick={() => navigate('/scan')}
+            onClick={() => router.push('/scan')}
           >
             Scan Lagi
           </button>
         </div>
       </div>
     </div>
+    </>
   );
 }
-
-export default Result;

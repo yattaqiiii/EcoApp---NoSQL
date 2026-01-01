@@ -1,8 +1,13 @@
+'use client';
+
+import Navbar from '@/components/Navbar';
 import './About.css';
 
-function About() {
+export default function About() {
   return (
-    <div className="about-container">
+    <>
+      <Navbar />
+      <div className="about-container">
       <div className="about-header">
         <h1>Tentang EcoScan</h1>
         <p className="tagline">Solusi Cerdas untuk Identifikasi Sampah</p>
@@ -90,15 +95,15 @@ function About() {
           <div className="tech-stack">
             <h3>Teknologi yang Digunakan</h3>
             <div className="tech-badges">
-              <span className="tech-badge">React.js</span>
-              <span className="tech-badge">AI/Machine Learning</span>
-              <span className="tech-badge">Computer Vision</span>
+              <span className="tech-badge">Next.js 15</span>
+              <span className="tech-badge">React 19</span>
+              <span className="tech-badge">TensorFlow.js</span>
+              <span className="tech-badge">MongoDB</span>
             </div>
           </div>
         </section>
       </div>
     </div>
+    </>
   );
 }
-
-export default About;

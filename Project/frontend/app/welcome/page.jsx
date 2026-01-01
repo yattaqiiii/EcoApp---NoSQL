@@ -1,16 +1,18 @@
+'use client';
+
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import './Welcome.css';
 
-function Welcome() {
-  const navigate = useNavigate();
+export default function Welcome() {
+  const router = useRouter();
   const [currentScreen, setCurrentScreen] = useState(0);
 
   const handleNext = () => {
     if (currentScreen < 2) {
       setCurrentScreen(currentScreen + 1);
     } else {
-      navigate('/home');
+      router.push('/home');
     }
   };
 
@@ -80,5 +82,3 @@ function Welcome() {
     </div>
   );
 }
-
-export default Welcome;

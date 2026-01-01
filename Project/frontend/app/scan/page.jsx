@@ -1,11 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLocation } from '../../context/LocationContext';
-import { FAKULTAS_OPTIONS } from '../../utils/locationConfig';
-import './Scan.css';
-import { loadModel, predictImage, getWasteInfo, isModelLoaded } from '../../utils/modelUtils';
+'use client';
 
-function Scan() {
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocation } from '@/context/LocationContext';
+import { FAKULTAS_OPTIONS } from '@/utils/locationConfig';
+import Navbar from '@/components/Navbar';
+import './Scan.css';
+import { loadModel, predictImage, getWasteInfo, isModelLoaded } from '@/utils/modelUtils';
+
+export default function Scan() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -13,16 +16,16 @@ function Scan() {
   const [modelError, setModelError] = useState(null);
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { selectedFakultas, isLocationSet } = useLocation();
 
   // Cek apakah user sudah pilih fakultas
   useEffect(() => {
     if (!selectedFakultas) {
       alert('Silakan pilih fakultas terlebih dahulu!');
-      navigate('/home');
+      router.push('/home');
     }
-  }, [selectedFakultas, navigate]);
+  }, [selectedFakultas, router]);
 
   // Load model saat component mount
   useEffect(() => {
@@ -91,20 +94,21 @@ function Scan() {
 
       setIsProcessing(false);
       
-      // Navigate ke result page dengan data prediksi dan fakultas
-      navigate('/result', {
-        state: {
-          image: previewUrl,
-          wasteType: prediction.label,
-          category: wasteInfo.category,
-          confidence: Math.round(prediction.confidence),
-          disposal: wasteInfo.disposal,
-          additionalInfo: wasteInfo.additionalInfo,
-          allPredictions: prediction.allPredictions,
-          // Tambahkan info fakultas (lokasi spesifik dipilih di Result page)
-          fakultas: selectedFakultas
-        }
-      });
+      // Store data di sessionStorage karena Next.js tidak support state via router
+      const resultData = {
+        image: previewUrl,
+        wasteType: prediction.label,
+        category: wasteInfo.category,
+        confidence: Math.round(prediction.confidence),
+        disposal: wasteInfo.disposal,
+        additionalInfo: wasteInfo.additionalInfo,
+        allPredictions: prediction.allPredictions,
+        fakultas: selectedFakultas
+      };
+      sessionStorage.setItem('scanResult', JSON.stringify(resultData));
+      
+      // Navigate ke result page
+      router.push('/result');
     } catch (error) {
       setIsProcessing(false);
       console.error('Error during scanning:', error);
@@ -121,13 +125,15 @@ function Scan() {
   };
 
   const handleChangeLocation = () => {
-    navigate('/home');
+    router.push('/home');
   };
 
   const fakultasLabel = FAKULTAS_OPTIONS.find(f => f.value === selectedFakultas)?.label || '';
 
   return (
-    <div className="scan-container">
+    <>
+      <Navbar />
+      <div className="scan-container">
       <div className="scan-header">
         <h1>Scan Sampah</h1>
         <p>Ambil atau upload foto sampah untuk identifikasi</p>
@@ -227,7 +233,6 @@ function Scan() {
         </div>
       )}
     </div>
+    </>
   );
 }
-
-export default Scan;
