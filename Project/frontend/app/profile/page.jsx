@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRequireAuth } from '@/utils/authHooks';
+import { logout } from '@/utils/authUtils';
 import Navbar from '@/components/Navbar';
 
 export default function Profile() {
   const router = useRouter();
+  const { user: authUser, isLoading: authLoading } = useRequireAuth();
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Dummy statistics
   const dummyStats = {
@@ -26,26 +28,14 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    // Ambil user data dari localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      // Jika tidak ada user, set dummy user
-      const dummyUser = {
-        name: 'Pengguna Demo',
-        email: 'demo@ecoscan.com',
-        joinDate: 'Januari 2026'
-      };
-      setUser(dummyUser);
-      localStorage.setItem('user', JSON.stringify(dummyUser));
+    if (authUser) {
+      setUser(authUser);
     }
-    setIsLoading(false);
-  }, []);
+  }, [authUser]);
 
   const handleLogout = () => {
     // Hapus user data dari localStorage
-    localStorage.removeItem('user');
+    logout();
     // Redirect ke welcome page
     router.push('/welcome');
   };
@@ -54,14 +44,11 @@ export default function Profile() {
     alert('Fitur edit profile akan segera tersedia!');
   };
 
-  if (isLoading) {
+  if (authLoading) {
     return (
-      <>
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
-        </div>
-      </>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
+      </div>
     );
   }
 

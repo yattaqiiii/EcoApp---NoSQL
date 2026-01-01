@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { setUser } from '@/utils/authUtils';
 
 export default function Login() {
   const router = useRouter();
@@ -45,10 +46,11 @@ export default function Login() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Simpan user data ke localStorage (temporary)
-      localStorage.setItem('user', JSON.stringify({
+      setUser({
         email: formData.email,
-        name: 'User Demo'
-      }));
+        name: 'User Demo',
+        joinDate: 'Januari 2026'
+      });
 
       // Redirect ke home
       router.push('/home');

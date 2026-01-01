@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocation } from '@/context/LocationContext';
 import { FAKULTAS_OPTIONS } from '@/utils/locationConfig';
+import { useRequireAuth } from '@/utils/authHooks';
 import Navbar from '@/components/Navbar';
 import { loadModel, predictImage, getWasteInfo, isModelLoaded } from '@/utils/modelUtils';
 
 export default function Scan() {
+  const { user, isLoading: authLoading } = useRequireAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -20,11 +22,11 @@ export default function Scan() {
 
   // Cek apakah user sudah pilih fakultas
   useEffect(() => {
-    if (!selectedFakultas) {
+    if (!authLoading && !selectedFakultas) {
       alert('Silakan pilih fakultas terlebih dahulu!');
       router.push('/home');
     }
-  }, [selectedFakultas, router]);
+  }, [selectedFakultas, router, authLoading]);
 
   // Load model saat component mount
   useEffect(() => {
@@ -43,6 +45,15 @@ export default function Scan() {
 
     initModel();
   }, []);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
