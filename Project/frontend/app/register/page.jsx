@@ -47,32 +47,29 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      // TODO: Integrate with backend API
-      // const response = await fetch('/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     name: formData.name,
-      //     email: formData.email,
-      //     password: formData.password
-      //   })
-      // });
-
-      // Simulasi register (untuk development)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simpan user data ke localStorage (temporary)
-      setUser({
-        email: formData.email,
-        name: formData.name,
-        joinDate: 'Januari 2026'
+      // Panggil API Backend (Gunakan 127.0.0.1 agar aman)
+      const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
       });
 
-      // Redirect ke home
-      router.push('/home');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mendaftar');
+      }
+      
+      // Auto login / Simpan data (Opsional, di sini kita redirect ke login dulu)
+      alert('Registrasi Berhasil! Silakan Login.');
+      router.push('/login'); // Arahkan ke halaman login
+
     } catch (err) {
-      setError('Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
-      console.error('Register error:', err);
+      setError(err.message); // Tampilkan pesan error dari backend
     } finally {
       setIsLoading(false);
     }

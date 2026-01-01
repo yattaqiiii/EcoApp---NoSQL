@@ -101,6 +101,33 @@ export default function Scan() {
       
       // Get waste info berdasarkan label
       const wasteInfo = getWasteInfo(prediction.label);
+      // --- TAMBAHAN BARU: KIRIM KE BACKEND ---
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            waste_type: prediction.label,
+            confidence: Math.round(prediction.confidence),
+            fakultas: selectedFakultas, // Pastikan user sudah pilih fakultas
+            lokasi_id: selectedFakultas 
+          }),
+        });
+
+        const responseJson = await response.json();
+        
+        if (response.ok) {
+          console.log("✅ SUKSES: Data masuk ke MongoDB!", responseJson);
+        } else {
+          console.error("❌ GAGAL: Backend menolak.", responseJson);
+        }
+      } catch (err) {
+        console.error("⚠️ ERROR KONEKSI: Pastikan backend jalan di port 5000", err);
+        // Kita tidak 'throw' error di sini agar user tetap bisa lanjut
+        // melihat hasil scan meskipun database sedang mati.
+      }
 
       setIsProcessing(false);
       

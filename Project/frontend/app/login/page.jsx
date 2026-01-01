@@ -35,28 +35,34 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // TODO: Integrate with backend API
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
+      // Panggil API Backend Login
+      const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
 
-      // Simulasi login (untuk development)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login gagal');
+      }
       
-      // Simpan user data ke localStorage (temporary)
+      // Simpan user data ASLI dari Database ke localStorage
+      // Fungsi setUser ada di utils/authUtils.js
       setUser({
-        email: formData.email,
-        name: 'User Demo',
-        joinDate: 'Januari 2026'
+        email: data.user.email,
+        name: data.user.name,
+        level: data.user.level, // Load Level dari DB
+        xp: data.user.total_xp, // Load XP dari DB
+        joinDate: data.user.joinDate
       });
 
       // Redirect ke home
       router.push('/home');
+
     } catch (err) {
-      setError('Terjadi kesalahan saat login. Silakan coba lagi.');
-      console.error('Login error:', err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }

@@ -27,4 +27,4 @@ const wasteLogSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('WasteLog', wasteLogSchema);
+export default mongoose.model('WasteLog', wasteLogSchema, 'waste_logs');
