@@ -4,7 +4,11 @@ import { LocationProvider } from '@/context/LocationContext';
 export const metadata = {
   title: 'EcoScan - AI Waste Classification',
   description: 'Aplikasi klasifikasi sampah menggunakan AI untuk kampus UPI',
-  viewport: 'width=device-width, initial-scale=1',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {

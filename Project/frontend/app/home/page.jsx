@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useLocation } from '@/context/LocationContext';
 import { FAKULTAS_OPTIONS } from '@/utils/locationConfig';
 import Navbar from '@/components/Navbar';
-import './Home.css';
 
 export default function Home() {
   const router = useRouter();
@@ -32,25 +31,36 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <div className="home-container">
-        <div className="hero-section">
-          <h1 className="app-title">EcoScan</h1>
-          <p className="app-tagline">Identifikasi Sampah dengan Mudah</p>
-          <p className="app-description">
+      <div className="px-5 max-w-7xl mx-auto py-5">
+        {/* Hero Section */}
+        <div className="text-center py-16 px-5 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-[20px] text-white mb-16 shadow-[0_10px_30px_rgba(102,126,234,0.3)]">
+          <h1 className="text-6xl font-extrabold mb-4 drop-shadow-[2px_2px_4px_rgba(0,0,0,0.2)]">
+            EcoScan
+          </h1>
+          <p className="text-2xl mb-5 font-medium">
+            Identifikasi Sampah dengan Mudah
+          </p>
+          <p className="text-lg max-w-3xl mx-auto mb-10 leading-relaxed opacity-95">
             Scan sampah Anda dan dapatkan informasi tentang jenis sampah serta 
             cara pembuangan yang benar untuk lingkungan yang lebih bersih.
           </p>
           
           {/* Location Selection */}
-          <div className="location-selection">
-            <h3 className="location-title">📍 Pilih Fakultas Anda</h3>
-            <p className="location-subtitle">Lokasi spesifik akan dipilih setelah scan</p>
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-8 my-8 mx-auto max-w-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+            <h3 className="text-xl mb-2 font-semibold">
+              📍 Pilih Fakultas Anda
+            </h3>
+            <p className="text-sm opacity-85 mb-5">
+              Lokasi spesifik akan dipilih setelah scan
+            </p>
             
-            <div className="dropdown-container">
-              <label htmlFor="fakultas-select">Fakultas:</label>
+            <div className="mb-5 text-left">
+              <label htmlFor="fakultas-select" className="block mb-2 font-medium text-base">
+                Fakultas:
+              </label>
               <select
                 id="fakultas-select"
-                className="location-dropdown"
+                className="w-full px-4 py-3 text-base border-2 border-white/30 rounded-xl bg-white/90 text-gray-800 cursor-pointer transition-all duration-300 hover:border-white/60 hover:bg-white focus:outline-none focus:border-white focus:ring-4 focus:ring-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={selectedFakultas}
                 onChange={handleFakultasChange}
               >
@@ -64,9 +74,9 @@ export default function Home() {
             </div>
 
             {selectedFakultas && (
-              <div className="location-info">
-                <p className="fakultas-selected">
-                  ✅ Fakultas dipilih: <strong>
+              <div className="mt-5 p-4 bg-white/20 rounded-xl text-left">
+                <p className="text-base leading-normal m-0">
+                  ✅ Fakultas dipilih: <strong className="text-white font-semibold">
                     {FAKULTAS_OPTIONS.find(f => f.value === selectedFakultas)?.label}
                   </strong>
                 </p>
@@ -75,7 +85,7 @@ export default function Home() {
           </div>
 
           <button 
-            className="btn-primary" 
+            className="bg-white text-[#667eea] border-none px-12 py-4 text-xl font-semibold rounded-full cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)] mt-5 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed active:enabled:translate-y-0" 
             onClick={handleStartScan}
             disabled={!selectedFakultas}
           >
@@ -83,28 +93,47 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="features-section">
-          <h2>Fitur Unggulan</h2>
-          <div className="features-grid">
-            <div className="feature-card">
-              <span className="feature-icon">🔍</span>
-              <h3>Identifikasi Cepat</h3>
-              <p>Scan dan identifikasi jenis sampah dalam hitungan detik</p>
+        {/* Features Section */}
+        <div className="py-10 px-5">
+          <h2 className="text-center text-4xl text-gray-800 mb-10">
+            Fitur Unggulan
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8 max-w-5xl mx-auto">
+            <div className="bg-white p-8 rounded-2xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_25px_rgba(0,0,0,0.15)]">
+              <span className="text-5xl block mb-4">🔍</span>
+              <h3 className="text-xl text-gray-800 mb-2.5">
+                Identifikasi Cepat
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Scan dan identifikasi jenis sampah dalam hitungan detik
+              </p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">♻️</span>
-              <h3>Panduan Pembuangan</h3>
-              <p>Dapatkan instruksi cara membuang sampah yang benar</p>
+            <div className="bg-white p-8 rounded-2xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_25px_rgba(0,0,0,0.15)]">
+              <span className="text-5xl block mb-4">♻️</span>
+              <h3 className="text-xl text-gray-800 mb-2.5">
+                Panduan Pembuangan
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Dapatkan instruksi cara membuang sampah yang benar
+              </p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">🌱</span>
-              <h3>Ramah Lingkungan</h3>
-              <p>Bantu menjaga lingkungan dengan pemilahan sampah yang tepat</p>
+            <div className="bg-white p-8 rounded-2xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_25px_rgba(0,0,0,0.15)]">
+              <span className="text-5xl block mb-4">🌱</span>
+              <h3 className="text-xl text-gray-800 mb-2.5">
+                Ramah Lingkungan
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Bantu menjaga lingkungan dengan pemilahan sampah yang tepat
+              </p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">📍</span>
-              <h3>Lokasi Spesifik</h3>
-              <p>Rekomendasi tempat sampah sesuai lokasi Anda di kampus</p>
+            <div className="bg-white p-8 rounded-2xl text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_6px_25px_rgba(0,0,0,0.15)]">
+              <span className="text-5xl block mb-4">📍</span>
+              <h3 className="text-xl text-gray-800 mb-2.5">
+                Lokasi Spesifik
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Rekomendasi tempat sampah sesuai lokasi Anda di kampus
+              </p>
             </div>
           </div>
         </div>

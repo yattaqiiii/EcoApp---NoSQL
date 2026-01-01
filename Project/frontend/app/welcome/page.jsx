@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import './Welcome.css';
 
 export default function Welcome() {
   const router = useRouter();
@@ -37,48 +36,78 @@ export default function Welcome() {
   const currentData = screens[currentScreen];
 
   return (
-    <div className="welcome-container">
-      <div className="welcome-content">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#f8f9ff] to-white p-5">
+      <div className="max-w-[480px] w-full text-center flex flex-col items-center gap-7">
         {/* Logo Section */}
-        <div className="logo-section">
-          <h1 className="brand-logo">
+        <div className="mt-5">
+          <h1 className="text-5xl font-bold text-primary mb-1 flex items-center justify-center gap-2.5 tracking-[2px]">
             EcoScan
           </h1>
-          <p className="brand-subtitle">Our New Lifestyles</p>
+          <p className="text-sm text-gray-500 italic m-0">Our New Lifestyles</p>
         </div>
 
         {/* Illustration Section */}
-        <div className="illustration-section">
-          <div className="illustration-placeholder">
+        <div className="w-full my-5">
+          <div className="w-full max-w-[400px] h-[350px] mx-auto gradient-primary rounded-[30px] flex items-center justify-center relative overflow-hidden shadow-[0_10px_40px_rgba(102,126,234,0.1)]">
             {/* Placeholder untuk ilustrasi */}
-            <div className="illustration-icon">
-              <span className="icon-large">{currentData.icons.large}</span>
-              <span className="icon-medium">{currentData.icons.medium}</span>
-              <span className="icon-small">{currentData.icons.small}</span>
+            <div className="relative w-[200px] h-[200px] flex items-center justify-center">
+              <span className="text-[8rem] absolute animate-[float_3s_ease-in-out_infinite]">
+                {currentData.icons.large}
+              </span>
+              <span className="text-6xl absolute top-5 right-2.5 animate-[float_2.5s_ease-in-out_infinite] [animation-delay:0.5s]">
+                {currentData.icons.medium}
+              </span>
+              <span className="text-5xl absolute bottom-7 left-5 animate-[float_2s_ease-in-out_infinite] [animation-delay:1s]">
+                {currentData.icons.small}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="content-section">
-          <h2 className="welcome-title">{currentData.title}</h2>
-          <p className="welcome-description">
+        <div className="px-5">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            {currentData.title}
+          </h2>
+          <p className="text-lg text-gray-600 leading-relaxed max-w-[400px] mx-auto">
             {currentData.description}
           </p>
         </div>
 
         {/* Progress Indicator */}
-        <div className="progress-indicator">
-          <span className={`dot ${currentScreen === 0 ? 'active' : ''}`}></span>
-          <span className={`dot ${currentScreen === 1 ? 'active' : ''}`}></span>
-          <span className={`dot ${currentScreen === 2 ? 'active' : ''}`}></span>
+        <div className="flex gap-3 justify-center my-2.5">
+          {[0, 1, 2].map((index) => (
+            <span
+              key={index}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                currentScreen === index
+                  ? 'w-[30px] gradient-primary'
+                  : 'w-2.5 bg-gray-300'
+              }`}
+            ></span>
+          ))}
         </div>
 
         {/* Button Section */}
-        <button className="btn-enter" onClick={handleNext}>
+        <button
+          className="w-full max-w-[400px] py-4 px-10 text-xl font-semibold text-white gradient-primary border-none rounded-full cursor-pointer transition-all duration-300 shadow-[0_8px_20px_rgba(102,126,234,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(102,126,234,0.4)] active:-translate-y-0 mt-2.5"
+          onClick={handleNext}
+        >
           {currentScreen === 2 ? 'Mulai' : 'Lanjutkan'}
         </button>
       </div>
+
+      {/* Keyframe animation */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-15px);
+          }
+        }
+      `}</style>
     </div>
   );
 }
