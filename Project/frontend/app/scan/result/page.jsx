@@ -71,18 +71,18 @@ export default function Result() {
     : '';
   
   // Map waste type ke bin category
-  const targetBin = result ? mapWasteTypeToBin(result.wasteType) : '';
-  const fallbackBin = result ? getFallbackBin(result.wasteType) : null;
+  const targetBin = result ? mapWasteTypeToBin(result.waste_type) : '';
+  const fallbackBin = result ? getFallbackBin(result.waste_type) : null;
   
   // Cari lokasi dengan fallback option
   const locationResult = selectedFakultas && result
-    ? findLocationsWithFallback(selectedFakultas, result.wasteType)
+    ? findLocationsWithFallback(selectedFakultas, result.waste_type)
     : { hasPrimary: false, hasFallback: false, primaryLocations: [], fallbackLocations: [] };
   
   // Debug logging
   console.log('Debug Info:', {
     fakultas: selectedFakultas,
-    wasteType: result?.wasteType,
+    waste_type: result?.waste_type,
     targetBin,
     fallbackBin,
     locationResult
@@ -196,7 +196,7 @@ export default function Result() {
               <span>{result.category}</span>
             </div>
 
-            <h2 className="text-4xl text-gray-800 mb-8 font-bold">{result.wasteType}</h2>
+            <h2 className="text-4xl text-gray-800 mb-8 font-bold">{result.waste_type}</h2>
 
             <div className="max-w-2xl mx-auto">
               <div className="flex justify-between mb-2.5 text-base text-gray-600">
@@ -220,7 +220,7 @@ export default function Result() {
                 <h3 className="text-2xl text-gray-800 m-0">Tempat Pembuangan Tersedia di {fakultasLabel}</h3>
               </div>
               <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
-                Buang sampah <strong>{result.wasteType}</strong> ke tempat sampah <strong>{targetBin}</strong> yang tersedia di lokasi berikut:
+                Buang sampah <strong>{result.waste_type}</strong> ke tempat sampah <strong>{targetBin}</strong> yang tersedia di lokasi berikut:
               </p>
               
               <div className="mt-5 flex flex-col gap-4">
@@ -267,7 +267,7 @@ export default function Result() {
                 </div>
                 <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
                   Tempat sampah khusus <strong>{targetBin}</strong> tidak tersedia di {fakultasLabel}, 
-                  tetapi Anda dapat membuang sampah <strong>{result.wasteType}</strong> ke tempat sampah <strong>{locationResult.fallbackBin}</strong> sebagai alternatif.
+                  tetapi Anda dapat membuang sampah <strong>{result.waste_type}</strong> ke tempat sampah <strong>{locationResult.fallbackBin}</strong> sebagai alternatif.
                 </p>
                 
                 <div className="mt-5 flex flex-col gap-4">
@@ -384,7 +384,7 @@ export default function Result() {
                 <h3 className="text-2xl text-gray-800 m-0">Tempat Sampah Tidak Tersedia di {fakultasLabel}</h3>
               </div>
               <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
-                Tempat sampah <strong>{targetBin}</strong> untuk sampah <strong>{result.wasteType}</strong> tidak tersedia di {fakultasLabel}. 
+                Tempat sampah <strong>{targetBin}</strong> untuk sampah <strong>{result.waste_type}</strong> tidak tersedia di {fakultasLabel}. 
                 Berikut rekomendasi lokasi terdekat yang menyediakan tempat sampah ini:
               </p>
               
@@ -457,7 +457,7 @@ export default function Result() {
                 <h3 className="text-2xl text-gray-800 m-0">Tempat Sampah Tidak Ditemukan</h3>
               </div>
               <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium">
-                Maaf, tempat sampah untuk <strong>{result.wasteType}</strong> belum tersedia di sistem kami.
+                Maaf, tempat sampah untuk <strong>{result.waste_type}</strong> belum tersedia di sistem kami.
                 Silakan hubungi pengelola kampus untuk informasi lebih lanjut.
               </p>
             </div>

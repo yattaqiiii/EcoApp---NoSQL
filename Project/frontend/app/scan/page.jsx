@@ -107,7 +107,7 @@ export default function Scan() {
       // Store data di sessionStorage karena Next.js tidak support state via router
       const resultData = {
         image: previewUrl,
-        wasteType: prediction.label,
+        waste_type: prediction.label,
         category: wasteInfo.category,
         confidence: Math.round(prediction.confidence),
         disposal: wasteInfo.disposal,
