@@ -2,9 +2,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+
 // Import Model WasteLog yang sudah kamu buat
 import WasteLog from './models/WasteLog.js'; 
 import User from './models/User.js';
+
+import statsRoutes from './routes/statsRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -118,6 +121,10 @@ app.post('/api/scan', async (req, res) => {
         res.status(500).json({ message: "Gagal menyimpan data", error: error.message });
     }
 });
+
+// API endpoint untuk mengambil data statistics
+app.use('/api/stats', statsRoutes);
+// app.get('/test', (req, res) => res.send("Server aktif"));
 
 // Port
 const PORT = process.env.PORT || 5000;
