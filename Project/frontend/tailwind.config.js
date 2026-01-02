@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ['class'],
     content: [
@@ -11,7 +11,7 @@ module.exports = {
   		colors: {
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
-  				dark: '#764ba2',
+  				dark: '#1e3a8a',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			organic: '#4caf50',
@@ -58,7 +58,7 @@ module.exports = {
   			}
   		},
   		backgroundImage: {
-  			'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  			'gradient-primary': 'linear-gradient(135deg, #10b981 0%, #1e3a8a 100%)'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

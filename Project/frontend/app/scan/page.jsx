@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,7 +57,7 @@ export default function Scan() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-[#10b981]/30 border-t-[#10b981] rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -201,7 +201,7 @@ export default function Scan() {
           
           {/* Fakultas Info */}
           {selectedFakultas && (
-            <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl py-5 px-6 my-6 mx-auto max-w-2xl flex justify-between items-center shadow-[0_4px_15px_rgba(102,126,234,0.3)]">
+            <div className="bg-[#1e293b] rounded-2xl py-5 px-6 my-6 mx-auto max-w-2xl flex justify-between items-center shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
               <div className="flex items-center gap-3 text-white">
                 <span className="text-3xl">🏛️</span>
                 <div className="flex flex-col items-start gap-1">
@@ -210,7 +210,7 @@ export default function Scan() {
                 </div>
               </div>
               <button 
-                className="bg-white/20 text-white border-2 border-white/50 py-2.5 px-5 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-white/30 hover:border-white/80 hover:-translate-y-0.5" 
+                className="bg-[#10b981] text-white border-none py-2.5 px-5 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-[#059669] hover:-translate-y-0.5 hover:shadow-md" 
                 onClick={handleChangeLocation}
               >
                 Ganti Fakultas
@@ -236,11 +236,11 @@ export default function Scan() {
           {!previewUrl ? (
             <div className="flex justify-center items-center min-h-[400px]">
               <div 
-                className="w-full max-w-2xl h-[400px] border-[3px] border-dashed border-[#667eea] rounded-2xl flex flex-col justify-center items-center cursor-pointer transition-all duration-300 bg-[#f8f9ff] hover:border-[#764ba2] hover:bg-[#f0f2ff] hover:scale-[1.02]"
+                className="w-full max-w-2xl h-[400px] border-[3px] border-dashed border-[#1e293b] rounded-2xl flex flex-col justify-center items-center cursor-pointer transition-all duration-300 bg-[#f8f9ff] hover:border-[#10b981] hover:bg-[#f0f2ff] hover:scale-[1.02]"
                 onClick={handleCameraClick}
               >
                 <span className="text-8xl mb-5">📷</span>
-                <p className="text-xl text-[#667eea] font-medium my-1">Klik untuk ambil/upload foto</p>
+                <p className="text-xl text-[#1e293b] font-medium my-1">Klik untuk ambil/upload foto</p>
                 <p className="text-sm text-gray-400 my-1">Format: JPG, PNG, JPEG</p>
               </div>
               <input
@@ -266,14 +266,14 @@ export default function Scan() {
               
               <div className="flex gap-4 justify-center">
                 <button 
-                  className="py-4 px-10 text-lg font-semibold border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-2.5 transition-all duration-300 bg-white text-[#667eea] border-2 border-[#667eea] hover:enabled:bg-[#f8f9ff] hover:enabled:-translate-y-0.5" 
+                  className="py-4 px-10 text-lg font-semibold rounded-full cursor-pointer inline-flex items-center justify-center gap-2.5 transition-all duration-300 bg-white text-[#1e293b] border-2 border-[#1e293b] hover:enabled:bg-gray-50 hover:enabled:-translate-y-0.5" 
                   onClick={handleReset}
                   disabled={isProcessing}
                 >
                   Ganti Foto
                 </button>
                 <button 
-                  className="py-4 px-10 text-lg font-semibold border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-2.5 transition-all duration-300 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_6px_20px_rgba(102,126,234,0.4)] disabled:opacity-70 disabled:cursor-not-allowed" 
+                  className="py-4 px-10 text-lg font-semibold border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-2.5 transition-all duration-300 bg-[#10b981] text-white hover:enabled:-translate-y-0.5 hover:enabled:shadow-md hover:enabled:bg-[#059669] disabled:opacity-70 disabled:cursor-not-allowed" 
                   onClick={handleScan}
                   disabled={isProcessing || isModelLoading}
                 >

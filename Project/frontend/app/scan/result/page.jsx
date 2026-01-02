@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -117,7 +117,7 @@ export default function Result() {
       'Kertas': '#8d6e63',
       'Residu': '#757575'
     };
-    return colors[category] || '#667eea';
+    return colors[category] || '#10b981';
   };
 
   const getCategoryIcon = (category) => {
@@ -138,11 +138,11 @@ export default function Result() {
       <div className="max-w-4xl mx-auto px-5 py-5 min-h-[calc(100vh-80px)]">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl text-gray-800">Hasil Identifikasi</h1>
+          <h1 className="text-4xl text-gray-800 font-bold">Hasil Identifikasi</h1>
           
           {/* Fakultas Info */}
           {fakultasLabel && (
-            <div className="inline-flex items-center gap-2 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white py-2.5 px-6 rounded-full text-base font-medium mt-4 shadow-[0_4px_10px_rgba(102,126,234,0.3)]">
+            <div className="inline-flex items-center gap-2 bg-[#1e293b] text-white py-2.5 px-6 rounded-full text-base font-medium mt-4 shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
               <span className="text-xl">🏛️</span>
               <span className="font-semibold">{fakultasLabel}</span>
             </div>
@@ -150,7 +150,7 @@ export default function Result() {
         </div>
 
         {/* XP Notification Card */}
-        <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(102,126,234,0.3)] animate-[slideInDown_0.5s_ease-out]">
+        <div className="bg-[#1e293b] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(0,0,0,0.3)] animate-[slideInDown_0.5s_ease-out]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl animate-[bounce_1s_ease-in-out_3]">
@@ -201,11 +201,11 @@ export default function Result() {
             <div className="max-w-2xl mx-auto">
               <div className="flex justify-between mb-2.5 text-base text-gray-600">
                 <span>Tingkat Kepercayaan</span>
-                <span className="font-bold text-[#667eea] text-xl">{result.confidence}%</span>
+                <span className="font-bold text-[#10b981] text-xl">{result.confidence}%</span>
               </div>
               <div className="w-full h-8 bg-gray-300 rounded-2xl overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] transition-all duration-1000 flex items-center justify-end pr-2.5 text-white font-bold"
+                  className="h-full bg-gradient-to-r from-[#10b981] to-[#1e3a8a] transition-all duration-1000 flex items-center justify-end pr-2.5 text-white font-bold"
                   style={{ width: `${result.confidence}%` }}
                 ></div>
               </div>
@@ -225,7 +225,7 @@ export default function Result() {
               
               <div className="mt-5 flex flex-col gap-4">
                 {locationResult.primaryLocations.map((lokasi, index) => (
-                  <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#667eea] hover:shadow-[0_4px_12px_rgba(102,126,234,0.15)]">
+                  <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
                     <div className="flex items-start gap-3 mb-3">
                       <span className="text-2xl mt-0.5">📍</span>
                       <div className="flex-1">
@@ -272,7 +272,7 @@ export default function Result() {
                 
                 <div className="mt-5 flex flex-col gap-4">
                   {locationResult.fallbackLocations.map((lokasi, index) => (
-                    <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#667eea] hover:shadow-[0_4px_12px_rgba(102,126,234,0.15)]">
+                    <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
                       <div className="flex items-start gap-3 mb-3">
                         <span className="text-2xl mt-0.5">📍</span>
                         <div className="flex-1">
@@ -320,7 +320,7 @@ export default function Result() {
                       const isExpanded = expandedFakultas[fakultasKey];
                       
                       return (
-                        <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#667eea]">
+                        <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#10b981]">
                           <div 
                             className="flex justify-between items-center py-4 px-5 cursor-pointer bg-[#f8f9ff] transition-colors duration-300 hover:bg-[#e8eaf6]"
                             onClick={() => toggleFakultas(fakultasKey)}
@@ -330,7 +330,7 @@ export default function Result() {
                               <span className="font-semibold text-base text-gray-800">{fakultasInfo?.label || fakultasKey}</span>
                               <span className="text-sm text-gray-600 font-medium">({locations.length} lokasi)</span>
                             </div>
-                            <span className={`text-xs text-[#667eea] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                            <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                               ▼
                             </span>
                           </div>
@@ -338,7 +338,7 @@ export default function Result() {
                           {isExpanded && (
                             <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
                               {locations.map((lokasi, index) => (
-                                <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#667eea] hover:shadow-[0_4px_12px_rgba(102,126,234,0.15)]">
+                                <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
                                   <div className="flex items-start gap-3 mb-3">
                                     <span className="text-2xl mt-0.5">📍</span>
                                     <div className="flex-1">
@@ -395,7 +395,7 @@ export default function Result() {
                   const isExpanded = expandedFakultas[fakultasKey];
                   
                   return (
-                    <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#667eea]">
+                    <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#10b981]">
                       <div 
                         className="flex justify-between items-center py-4 px-5 cursor-pointer bg-[#f8f9ff] transition-colors duration-300 hover:bg-[#e8eaf6]"
                         onClick={() => toggleFakultas(fakultasKey)}
@@ -405,7 +405,7 @@ export default function Result() {
                           <span className="font-semibold text-base text-gray-800">{fakultasInfo?.label || fakultasKey}</span>
                           <span className="text-sm text-gray-600 font-medium">({locations.length} lokasi)</span>
                         </div>
-                        <span className={`text-xs text-[#667eea] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                        <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                           ▼
                         </span>
                       </div>
@@ -413,7 +413,7 @@ export default function Result() {
                       {isExpanded && (
                         <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
                           {locations.map((lokasi, index) => (
-                            <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#667eea] hover:shadow-[0_4px_12px_rgba(102,126,234,0.15)]">
+                            <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
                               <div className="flex items-start gap-3 mb-3">
                                 <span className="text-2xl mt-0.5">📍</span>
                                 <div className="flex-1">
@@ -465,10 +465,10 @@ export default function Result() {
 
           {/* All Predictions (confidence breakdown) */}
           {result.allPredictions && result.allPredictions.length > 0 && (
-            <div className="bg-[#f8f9ff] border-l-[4px] border-[#667eea] py-6 px-6 rounded-xl mb-6">
+            <div className="bg-[#f8f9ff] border-l-[4px] border-[#1e293b] py-6 px-6 rounded-xl mb-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-3xl">📊</span>
-                <h3 className="text-2xl text-gray-800 m-0">Detail Prediksi</h3>
+                <h3 className="text-2xl text-gray-800 m-0 font-bold">Detail Prediksi</h3>
               </div>
               <div className="flex flex-col gap-4 mt-4">
                 {result.allPredictions.map((pred, index) => (
@@ -476,11 +476,11 @@ export default function Result() {
                     <span className="font-medium text-gray-800 text-sm">{pred.label}</span>
                     <div className="h-6 bg-gray-300 rounded-xl overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] transition-all duration-500 rounded-xl"
+                        className="h-full bg-gradient-to-r from-[#10b981] to-[#1e3a8a] transition-all duration-500 rounded-xl"
                         style={{ width: `${pred.confidence}%` }}
                       ></div>
                     </div>
-                    <span className="font-semibold text-[#667eea] text-right text-sm">{pred.confidence}%</span>
+                    <span className="font-semibold text-[#10b981] text-right text-sm">{pred.confidence}%</span>
                   </div>
                 ))}
               </div>
@@ -490,13 +490,13 @@ export default function Result() {
           {/* Action Buttons */}
           <div className="flex gap-4 mt-10">
             <button 
-              className="flex-1 py-4 px-8 text-lg font-semibold border-none rounded-full cursor-pointer transition-all duration-300 bg-white text-[#667eea] border-2 border-[#667eea] hover:bg-[#f8f9ff] hover:-translate-y-0.5"
+              className="flex-1 py-4 px-8 text-lg font-semibold border-none rounded-full cursor-pointer transition-all duration-300 bg-white text-[#10b981] border-2 border-[#10b981] hover:bg-[#f8f9ff] hover:-translate-y-0.5"
               onClick={() => router.push('/home')}
             >
               Kembali ke Home
             </button>
             <button 
-              className="flex-1 py-4 px-8 text-lg font-semibold border-none rounded-full cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)]"
+              className="flex-1 py-4 px-8 text-lg font-semibold border-none rounded-full cursor-pointer transition-all duration-300 bg-[#1e293b] text-white hover:-translate-y-0.5 hover:shadow-md hover:bg-[#334155]"
               onClick={() => router.push('/scan')}
             >
               Scan Lagi

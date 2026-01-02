@@ -48,7 +48,7 @@ export default function Welcome() {
 
         {/* Illustration Section */}
         <div className="w-full my-5">
-          <div className="w-full max-w-[400px] h-[350px] mx-auto gradient-primary rounded-[30px] flex items-center justify-center relative overflow-hidden shadow-[0_10px_40px_rgba(102,126,234,0.1)]">
+          <div className="w-full max-w-[400px] h-[350px] mx-auto bg-[#1e293b] rounded-[30px] flex items-center justify-center relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
             {/* Placeholder untuk ilustrasi */}
             <div className="relative w-[200px] h-[200px] flex items-center justify-center">
               <span className="text-[8rem] absolute animate-[float_3s_ease-in-out_infinite]">
@@ -81,7 +81,7 @@ export default function Welcome() {
               key={index}
               className={`h-2.5 rounded-full transition-all duration-300 ${
                 currentScreen === index
-                  ? 'w-[30px] gradient-primary'
+                  ? 'w-[30px] bg-[#10b981]'
                   : 'w-2.5 bg-gray-300'
               }`}
             ></span>
@@ -90,7 +90,7 @@ export default function Welcome() {
 
         {/* Button Section */}
         <button
-          className="w-full max-w-[400px] py-4 px-10 text-xl font-semibold text-white gradient-primary border-none rounded-full cursor-pointer transition-all duration-300 shadow-[0_8px_20px_rgba(102,126,234,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(102,126,234,0.4)] active:-translate-y-0 mt-2.5"
+          className="w-full max-w-[400px] py-4 px-10 text-xl font-semibold text-white bg-[#10b981] hover:bg-[#059669] border-none rounded-full cursor-pointer transition-all duration-300 shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(16,185,129,0.4)] active:-translate-y-0 mt-2.5"
           onClick={handleNext}
         >
           {currentScreen === 2 ? 'Mulai' : 'Lanjutkan'}

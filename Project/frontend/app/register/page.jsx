@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -76,7 +76,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center px-5 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#10b981] to-[#1e3a8a] flex items-center justify-center px-5 py-10">
       <div className="bg-white rounded-[30px] shadow-[0_10px_40px_rgba(0,0,0,0.2)] max-w-md w-full p-10">
         {/* Header */}
         <div className="text-center mb-8">
@@ -112,7 +112,7 @@ export default function Register() {
               value={formData.name}
               onChange={handleChange}
               placeholder="Masukkan nama lengkap"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/20"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#10b981] focus:ring-4 focus:ring-[#10b981]/20"
               disabled={isLoading}
             />
           </div>
@@ -132,7 +132,7 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               placeholder="nama@email.com"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/20"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#10b981] focus:ring-4 focus:ring-[#10b981]/20"
               disabled={isLoading}
             />
           </div>
@@ -152,7 +152,7 @@ export default function Register() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Minimal 6 karakter"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/20"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#10b981] focus:ring-4 focus:ring-[#10b981]/20"
               disabled={isLoading}
             />
           </div>
@@ -172,7 +172,7 @@ export default function Register() {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Ulangi password"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/20"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base transition-all duration-300 focus:outline-none focus:border-[#10b981] focus:ring-4 focus:ring-[#10b981]/20"
               disabled={isLoading}
             />
           </div>
@@ -181,7 +181,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-semibold text-lg py-3.5 rounded-full transition-all duration-300 hover:enabled:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:enabled:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+            className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-semibold text-lg py-3.5 rounded-full transition-all duration-300 hover:enabled:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:enabled:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
           >
             {isLoading ? (
               <>
@@ -207,7 +207,7 @@ export default function Register() {
             Sudah punya akun?{' '}
             <Link 
               href="/login" 
-              className="text-[#667eea] font-semibold hover:underline"
+              className="text-[#10b981] font-semibold hover:underline"
             >
               Masuk sekarang
             </Link>

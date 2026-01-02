@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -32,7 +32,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-br from-[#667eea] to-[#764ba2] shadow-[0_2px_10px_rgba(0,0,0,0.1)] sticky top-0 z-[100]">
+    <nav className="bg-[#1e293b] shadow-[0_2px_10px_rgba(0,0,0,0.1)] sticky top-0 z-[100]">
       <div className="max-w-7xl mx-auto py-4 px-5 flex justify-between items-center">
         <Link 
           href="/home" 
@@ -45,10 +45,10 @@ function Navbar() {
           <li className="m-0">
             <Link 
               href="/home" 
-              className={`text-white no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
+              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
                 isActive('/home') 
-                  ? 'bg-white text-[#667eea] font-semibold' 
-                  : 'hover:bg-white/20'
+                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Home
@@ -57,10 +57,10 @@ function Navbar() {
           <li className="m-0">
             <Link 
               href="/scan" 
-              className={`text-white no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
+              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
                 isActive('/scan') 
-                  ? 'bg-white text-[#667eea] font-semibold' 
-                  : 'hover:bg-white/20'
+                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Scan
@@ -69,10 +69,10 @@ function Navbar() {
           <li className="m-0">
             <Link 
               href="/about" 
-              className={`text-white no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
+              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
                 isActive('/about') 
-                  ? 'bg-white text-[#667eea] font-semibold' 
-                  : 'hover:bg-white/20'
+                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Tentang
@@ -81,10 +81,10 @@ function Navbar() {
           <li className="m-0">
             <Link 
               href="/profile" 
-              className={`text-white no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
+              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
                 isActive('/profile') 
-                  ? 'bg-white text-[#667eea] font-semibold' 
-                  : 'hover:bg-white/20'
+                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Profile
@@ -93,10 +93,10 @@ function Navbar() {
           <li className="m-0">
             <button
               onClick={handleAuthClick}
-              className={`text-white no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block border-none cursor-pointer bg-transparent ${
+              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block border-none cursor-pointer bg-transparent ${
                 isActive('/login') 
-                  ? 'bg-white text-[#667eea] font-semibold' 
-                  : 'hover:bg-white/20'
+                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               {isLoggedIn ? 'Logout' : 'Login'}

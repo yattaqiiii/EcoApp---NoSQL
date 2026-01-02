@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ export default function Home() {
       <Navbar />
       <div className="px-5 max-w-7xl mx-auto py-5">
         {/* Hero Section */}
-        <div className="text-center py-16 px-5 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-[20px] text-white mb-16 shadow-[0_10px_30px_rgba(102,126,234,0.3)]">
+        <div className="text-center py-16 px-5 bg-[#1e293b] rounded-[20px] text-white mb-16 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
           <h1 className="text-6xl font-extrabold mb-4 drop-shadow-[2px_2px_4px_rgba(0,0,0,0.2)]">
             EcoScan
           </h1>
@@ -46,21 +46,21 @@ export default function Home() {
           </p>
           
           {/* Location Selection */}
-          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-8 my-8 mx-auto max-w-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-            <h3 className="text-xl mb-2 font-semibold">
+          <div className="bg-[#10b981] rounded-2xl p-8 my-8 mx-auto max-w-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+            <h3 className="text-xl mb-2 font-semibold text-white">
               📍 Pilih Fakultas Anda
             </h3>
-            <p className="text-sm opacity-85 mb-5">
+            <p className="text-sm text-white/90 mb-5">
               Lokasi spesifik akan dipilih setelah scan
             </p>
             
             <div className="mb-5 text-left">
-              <label htmlFor="fakultas-select" className="block mb-2 font-medium text-base">
+              <label htmlFor="fakultas-select" className="block mb-2 font-medium text-base text-white">
                 Fakultas:
               </label>
               <select
                 id="fakultas-select"
-                className="w-full px-4 py-3 text-base border-2 border-white/30 rounded-xl bg-white/90 text-gray-800 cursor-pointer transition-all duration-300 hover:border-white/60 hover:bg-white focus:outline-none focus:border-white focus:ring-4 focus:ring-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 text-base border-2 border-white/30 rounded-xl bg-white text-gray-800 cursor-pointer transition-all duration-300 hover:border-white hover:shadow-md focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={selectedFakultas}
                 onChange={handleFakultasChange}
               >
@@ -75,8 +75,8 @@ export default function Home() {
 
             {selectedFakultas && (
               <div className="mt-5 p-4 bg-white/20 rounded-xl text-left">
-                <p className="text-base leading-normal m-0">
-                  ✅ Fakultas dipilih: <strong className="text-white font-semibold">
+                <p className="text-base leading-normal m-0 text-white">
+                  ✅ Fakultas dipilih: <strong className="font-semibold">
                     {FAKULTAS_OPTIONS.find(f => f.value === selectedFakultas)?.label}
                   </strong>
                 </p>
@@ -85,7 +85,7 @@ export default function Home() {
           </div>
 
           <button 
-            className="bg-white text-[#667eea] border-none px-12 py-4 text-xl font-semibold rounded-full cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)] mt-5 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed active:enabled:translate-y-0" 
+            className="bg-white text-[#1e293b] border-none px-12 py-4 text-xl font-semibold rounded-full cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)] mt-5 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed active:enabled:translate-y-0" 
             onClick={handleStartScan}
             disabled={!selectedFakultas}
           >

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -273,7 +273,7 @@ export default function Profile() {
   if (authLoading || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-[#667eea]/30 border-t-[#667eea] rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-[#10b981]/30 border-t-[#10b981] rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -286,10 +286,10 @@ export default function Profile() {
       <Navbar />
       <div className="max-w-5xl mx-auto px-5 py-8">
         {/* Profile Header */}
-        <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-[25px] p-8 text-white mb-8 shadow-[0_10px_30px_rgba(102,126,234,0.3)]">
+        <div className="bg-[#1e293b] rounded-[25px] p-8 text-white mb-8 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-[#667eea] text-5xl font-bold shadow-lg">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-[#10b981] text-5xl font-bold shadow-lg">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             
@@ -304,7 +304,7 @@ export default function Profile() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleEditProfile}
-                className="bg-white text-[#667eea] px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                className="bg-white text-[#10b981] px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
               >
                 Edit Profile
               </button>
@@ -319,7 +319,7 @@ export default function Profile() {
         </div>
 
         {/* Level Container - Separated */}
-        <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(102,126,234,0.3)]">
+        <div className="bg-[#1e293b] rounded-2xl p-6 mb-6 shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
@@ -353,7 +353,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <div className="bg-white rounded-2xl p-6 text-center shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-transform duration-300">
             <div className="text-4xl mb-3">🔍</div>
-            <div className="text-3xl font-bold text-[#667eea] mb-1">{displayStats.totalScans}</div>
+            <div className="text-3xl font-bold text-[#10b981] mb-1">{displayStats.totalScans}</div>
             <div className="text-gray-600 text-sm font-medium">Total Scan</div>
           </div>
           
@@ -365,58 +365,71 @@ export default function Profile() {
         </div>
 
         {/* Recent Activity */}
-        <div className="px-5 -mt-12">
-          <div className="bg-white rounded-3xl shadow-xl p-6 min-h-[300px]">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <span>📜</span> Riwayat Sampah
-            </h2>
+        <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)] mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span>📜</span> Riwayat Sampah
+          </h2>
 
-            {loadingLogs ? (
-              <p className="text-center text-gray-400 py-10">Sedang memuat riwayat...</p>
-            ) : logs.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-4xl mb-3">🍃</p>
-                <p className="text-gray-500">Belum ada sampah yang discan.</p>
-                <p className="text-sm text-gray-400 mt-2">Yuk scan sampahmu sekarang!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
+          {loadingLogs ? (
+            <div className="text-center py-10">
+              <div className="w-12 h-12 border-4 border-[#10b981]/30 border-t-[#10b981] rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-400">Sedang memuat riwayat...</p>
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="text-6xl mb-4">🍃</div>
+              <p className="text-gray-600 font-semibold mb-2">Belum ada sampah yang discan.</p>
+              <p className="text-sm text-gray-400">Yuk scan sampahmu sekarang!</p>
+              <Link
+                href="/scan"
+                className="inline-block mt-6 bg-[#10b981] text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:bg-[#059669]"
+              >
+                Scan Sampah Baru
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto pr-2">
                 {/* Looping data logs untuk ditampilkan */}
                 {logs.map((log) => (
-                  <div key={log._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-md transition-all">
+                  <div key={log._id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:shadow-md hover:border-[#10b981]/30 transition-all">
                     <div className="flex items-center gap-4">
                       {/* Ikon berdasarkan jenis sampah */}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-sm
                         ${log.waste_type === 'Plastik' ? 'bg-orange-100 text-orange-600' : 
                           log.waste_type === 'Organik' ? 'bg-green-100 text-green-600' : 
                           'bg-blue-100 text-blue-600'}`}>
                         {log.waste_type === 'Plastik' ? '🥤' : log.waste_type === 'Organik' ? '🍂' : '♻️'}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-800">{log.waste_type}</h3>
+                        <h3 className="font-bold text-gray-800 text-lg">{log.waste_type}</h3>
                         <p className="text-xs text-gray-500">
-                            {new Date(log.timestamp).toLocaleDateString()} • {log.fakultas}
+                          {new Date(log.timestamp).toLocaleDateString('id-ID', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })} • {log.fakultas}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-[#667eea]">{log.confidence}%</span>
-                      <p className="text-[10px] text-gray-400">Akurasi</p>
+                      <span className="text-lg font-bold text-[#10b981]">{Math.round(log.confidence)}%</span>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Akurasi</p>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-
-            <div className="mt-6 text-center">
-              <Link
-                href="/scan"
-                className="inline-block bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:-translate-y-0.5"
-              >
-                Scan Sampah Baru
-              </Link>
-            </div>
-          </div>
+              
+              <div className="text-center pt-4 border-t border-gray-100">
+                <Link
+                  href="/scan"
+                  className="inline-block bg-[#10b981] text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:bg-[#059669]"
+                >
+                  Scan Sampah Baru
+                </Link>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Statistics Section */}
@@ -426,34 +439,34 @@ export default function Profile() {
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Statistik Scan</h2>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#10b981]/10 to-[#1e3a8a]/10 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                  <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-white text-lg">
                     📅
                   </div>
                   <span className="font-semibold text-gray-700">Hari Ini</span>
                 </div>
-                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.today}</span>
+                <span className="text-2xl font-bold text-[#10b981]">{displayStats.scanStats.today}</span>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#10b981]/10 to-[#1e3a8a]/10 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                  <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-white text-lg">
                     📆
                   </div>
                   <span className="font-semibold text-gray-700">Bulan Ini</span>
                 </div>
-                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.thisMonth}</span>
+                <span className="text-2xl font-bold text-[#10b981]">{displayStats.scanStats.thisMonth}</span>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#10b981]/10 to-[#1e3a8a]/10 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-lg">
+                  <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-white text-lg">
                     🗓️
                   </div>
                   <span className="font-semibold text-gray-700">Tahun Ini</span>
                 </div>
-                <span className="text-2xl font-bold text-[#667eea]">{displayStats.scanStats.thisYear}</span>
+                <span className="text-2xl font-bold text-[#10b981]">{displayStats.scanStats.thisYear}</span>
               </div>
             </div>
           </div>
@@ -503,7 +516,7 @@ export default function Profile() {
                 onClick={() => setChartPeriod('month')}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   chartPeriod === 'month'
-                    ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
+                    ? 'bg-[#10b981] text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -513,7 +526,7 @@ export default function Profile() {
                 onClick={() => setChartPeriod('year')}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   chartPeriod === 'year'
-                    ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md'
+                    ? 'bg-[#10b981] text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -523,7 +536,7 @@ export default function Profile() {
           </div>
 
           {/* SVG Line Chart */}
-          <div className="relative w-full h-64 bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-xl p-4">
+          <div className="relative w-full h-64 bg-[#f8f9ff] rounded-xl p-4">
             <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
               {/* Grid lines */}
               <line x1="0" y1="50" x2="800" y2="50" stroke="#e5e7eb" strokeWidth="1" />
@@ -568,12 +581,12 @@ export default function Profile() {
               {/* Gradients */}
               <defs>
                 <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#667eea" />
-                  <stop offset="100%" stopColor="#764ba2" />
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#1e3a8a" />
                 </linearGradient>
                 <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#667eea" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#764ba2" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.05" />
                 </linearGradient>
               </defs>
             </svg>
