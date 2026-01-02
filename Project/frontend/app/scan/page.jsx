@@ -7,6 +7,7 @@ import { FAKULTAS_OPTIONS } from '@/utils/locationConfig';
 import { useRequireAuth } from '@/utils/authHooks';
 import Navbar from '@/components/Navbar';
 import { loadModel, predictImage, getWasteInfo, isModelLoaded } from '@/utils/modelUtils';
+import { getUser } from '@/utils/authUtils';
 
 export default function Scan() {
   const { user, isLoading: authLoading } = useRequireAuth();
@@ -15,18 +16,24 @@ export default function Scan() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [modelError, setModelError] = useState(null);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
   const router = useRouter();
   const { selectedFakultas, isLocationSet } = useLocation();
 
+  // Set mounted untuk prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Cek apakah user sudah pilih fakultas
   useEffect(() => {
-    if (!authLoading && !selectedFakultas) {
+    if (!authLoading && !selectedFakultas && mounted) {
       alert('Silakan pilih fakultas terlebih dahulu!');
       router.push('/home');
     }
-  }, [selectedFakultas, router, authLoading]);
+  }, [selectedFakultas, router, authLoading, mounted]);
 
   // Load model saat component mount
   useEffect(() => {
@@ -74,6 +81,22 @@ export default function Scan() {
   };
 
   const handleScan = async () => {
+    // Get current user dari localStorage, dengan fallback ke user dari hook
+    let currentUser = getUser();
+    
+    // Jika localStorage kosong, gunakan user dari useRequireAuth hook
+    if (!currentUser && user) {
+      currentUser = user;
+    }
+    
+    console.log('Current User:', currentUser); // DEBUG
+    
+    if (!currentUser || !currentUser.id) {
+        alert("Sesi habis. Silakan login ulang.");
+        router.push('/login');
+        return;
+    }
+
     if (!selectedImage) {
       alert('Pilih gambar terlebih dahulu!');
       return;
@@ -103,18 +126,18 @@ export default function Scan() {
       const wasteInfo = getWasteInfo(prediction.label);
       // --- TAMBAHAN BARU: KIRIM KE BACKEND ---
       try {
+        // UPDATE FETCH BODY
         const response = await fetch('http://127.0.0.1:5000/api/scan', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            user_id: currentUser.id, // [PENTING] Kirim ID User
             waste_type: prediction.label,
             confidence: Math.round(prediction.confidence),
-            fakultas: selectedFakultas, // Pastikan user sudah pilih fakultas
-            lokasi_id: selectedFakultas 
+            fakultas: selectedFakultas,
+            lokasi_id: selectedFakultas
           }),
-        });
+      });
 
         const responseJson = await response.json();
         

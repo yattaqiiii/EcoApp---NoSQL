@@ -2,6 +2,13 @@ import mongoose from 'mongoose';
 
 const wasteLogSchema = new mongoose.Schema({
   // Jenis sampah hasil scan AI (misal: Plastik, Organik)
+
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId, // Tipe data ID MongoDB
+    ref: 'User', // Nyambung ke model 'User'
+    required: true // Wajib ada pemiliknya
+  },
+
   waste_type: { 
     type: String, 
     required: true 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRequireAuth } from '@/utils/authHooks';
-import { logout } from '@/utils/authUtils';
+import { logout, getUser } from '@/utils/authUtils';
 import Navbar from '@/components/Navbar';
 
 export default function Profile() {
@@ -12,11 +12,61 @@ export default function Profile() {
   const { user: authUser, isLoading: authLoading } = useRequireAuth();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
+  const [logs, setLogs] = useState([]); // State untuk riwayat
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [loadingLogs, setLoadingLogs] = useState(true);
   const [chartPeriod, setChartPeriod] = useState('year'); // 'year' or 'month'
+  const [mounted, setMounted] = useState(false);
 
-  // Dummy chart data
-  const chartData = {
+  // Function untuk generate chart data dari logs
+  const generateChartData = (logsData) => {
+    if (!logsData || logsData.length === 0) {
+      return { year: [], month: [] };
+    }
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // Data per bulan (tahun ini)
+    const monthData = Array.from({ length: 12 }, (_, i) => ({
+      label: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+      value: 0
+    }));
+
+    // Data per hari (bulan ini)
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const dayData = Array.from({ length: daysInMonth }, (_, i) => ({
+      label: String(i + 1),
+      value: 0
+    }));
+
+    // Hitung scan per bulan dan per hari
+    logsData.forEach(log => {
+      const logDate = new Date(log.timestamp);
+      const logYear = logDate.getFullYear();
+      const logMonth = logDate.getMonth();
+      const logDay = logDate.getDate();
+
+      // Tambahkan ke bulan jika tahun sama
+      if (logYear === currentYear) {
+        monthData[logMonth].value++;
+      }
+
+      // Tambahkan ke hari jika bulan dan tahun sama
+      if (logYear === currentYear && logMonth === currentMonth) {
+        dayData[logDay - 1].value++;
+      }
+    });
+
+    return {
+      year: monthData,
+      month: dayData
+    };
+  };
+
+  // Dummy chart data (fallback)
+  const dummyChartData = {
     year: [
       { label: 'Jan', value: 5 },
       { label: 'Feb', value: 8 },
@@ -58,7 +108,7 @@ export default function Profile() {
       thisMonth: 12,
       thisYear: 24
     },
-    chartData: chartData, // Add chart data
+    chartData: dummyChartData, // Add chart data
     topWasteTypes: [
       { type: 'Botol Plastik', count: 8, percentage: 33, color: '#ff9800' },
       { type: 'Kertas Bekas', count: 6, percentage: 25, color: '#8d6e63' },
@@ -72,12 +122,37 @@ export default function Profile() {
     ]
   };
 
+  // Set mounted state to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Set user data from auth
   useEffect(() => {
-    if (authUser) {
-      setUser(authUser);
+    const userData = getUser();
+    if (!userData) {
+      router.push('/login');
+      return;
     }
-  }, [authUser]);
+    setUser(userData);
+
+    // [BARU] Ambil Data History dari Backend
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/waste-logs?userId=${userData.id}`);
+        const data = await res.json();
+        if (res.ok) {
+          setLogs(data.data);
+        }
+      } catch (err) {
+        console.error("Gagal ambil history:", err);
+      } finally {
+        setLoadingLogs(false);
+      }
+    };
+
+    fetchHistory();
+  }, [router]);
 
   // Fetch user statistics from backend
   useEffect(() => {
@@ -87,37 +162,22 @@ export default function Profile() {
       try {
         setIsLoadingStats(true);
         
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/user/stats', {
-        //   method: 'GET',
-        //   headers: {
-        //     'Authorization': `Bearer ${authUser.token}`,
-        //     'Content-Type': 'application/json'
-        //   }
-        // });
-        // 
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch statistics');
-        // }
-        // 
-        // const data = await response.json();
-        // setStats(data);
-
-        // Simulate API delay and use dummy data for now
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setStats(dummyStats);
+        // Hitung stats dari logs yang sudah di-fetch (bahkan jika kosong)
+        const calculatedStats = calculateStatsFromLogs(logs);
+        setStats(calculatedStats);
         
       } catch (error) {
-        console.error('Error fetching user stats:', error);
-        // Fallback to dummy data on error
-        setStats(dummyStats);
+        console.error('Error calculating stats:', error);
+        // Fallback: hitung dari logs kosong
+        const calculatedStats = calculateStatsFromLogs([]);
+        setStats(calculatedStats);
       } finally {
         setIsLoadingStats(false);
       }
     };
 
     fetchUserStats();
-  }, [authUser]);
+  }, [logs, authUser]);
 
   const handleLogout = () => {
     // Hapus user data dari localStorage
@@ -130,6 +190,86 @@ export default function Profile() {
     alert('Fitur edit profile akan segera tersedia!');
   };
 
+  // Function untuk menghitung statistik dari logs
+  const calculateStatsFromLogs = (logsData) => {
+    // Jika logs kosong, kembalikan stats dengan nilai 0, bukan dummy
+    if (!logsData || logsData.length === 0) {
+      return {
+        ...dummyStats,
+        totalScans: 0,
+        wasteIdentified: 0,
+        scanStats: {
+          today: 0,
+          thisMonth: 0,
+          thisYear: 0
+        },
+        chartData: generateChartData([]),
+        topWasteTypes: []
+      };
+    }
+
+    const totalScans = logsData.length;
+    
+    // Hitung unique waste types (sampling untuk wasteIdentified)
+    const uniqueWasteTypes = new Set(logsData.map(log => log.waste_type));
+    const wasteIdentified = uniqueWasteTypes.size > 0 ? totalScans : 0;
+
+    // Hitung top waste types
+    const wasteTypeCount = {};
+    logsData.forEach(log => {
+      wasteTypeCount[log.waste_type] = (wasteTypeCount[log.waste_type] || 0) + 1;
+    });
+
+    const topWasteTypesArray = Object.entries(wasteTypeCount)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([type, count], index) => ({
+        type,
+        count,
+        percentage: Math.round((count / totalScans) * 100),
+        color: ['#ff9800', '#8d6e63', '#4caf50'][index] || '#2196f3'
+      }));
+
+    // Hitung scan stats berdasarkan tanggal
+    const today = new Date();
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const thisYear = new Date(today.getFullYear(), 0, 1);
+
+    let todayCount = 0;
+    let thisMonthCount = 0;
+    let thisYearCount = 0;
+
+    logsData.forEach(log => {
+      const logDate = new Date(log.timestamp);
+      
+      if (logDate.toDateString() === today.toDateString()) {
+        todayCount++;
+      }
+      if (logDate >= thisMonth) {
+        thisMonthCount++;
+      }
+      if (logDate >= thisYear) {
+        thisYearCount++;
+      }
+    });
+
+    // Generate chart data
+    const generatedChartData = generateChartData(logsData);
+
+    return {
+      ...dummyStats,
+      totalScans,
+      wasteIdentified,
+      scanStats: {
+        today: todayCount,
+        thisMonth: thisMonthCount,
+        thisYear: thisYearCount
+      },
+      chartData: generatedChartData,
+      topWasteTypes: topWasteTypesArray.length > 0 ? topWasteTypesArray : dummyStats.topWasteTypes
+    };
+  };
+
   if (authLoading || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -140,7 +280,7 @@ export default function Profile() {
 
   // Use stats from API or fallback to dummy
   const displayStats = stats || dummyStats;
-
+  if (!user || !mounted) return null;
   return (
     <>
       <Navbar />
@@ -225,43 +365,57 @@ export default function Profile() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-[25px] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Aktivitas Terakhir</h2>
-            <span className="text-sm text-gray-500">{displayStats.lastScan}</span>
-          </div>
+        <div className="px-5 -mt-12">
+          <div className="bg-white rounded-3xl shadow-xl p-6 min-h-[300px]">
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <span>📜</span> Riwayat Sampah
+            </h2>
 
-          <div className="space-y-4">
-            {displayStats.recentScans.map((scan) => (
-              <div 
-                key={scan.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center text-white text-xl">
-                    {scan.category === 'Organik' ? '🌿' : 
-                     scan.category === 'Plastik' ? '♻️' : 
-                     scan.category === 'Kertas' ? '📄' : '🗑️'}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">{scan.type}</h3>
-                    <p className="text-sm text-gray-500">{scan.category}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">{scan.date}</p>
-                </div>
+            {loadingLogs ? (
+              <p className="text-center text-gray-400 py-10">Sedang memuat riwayat...</p>
+            ) : logs.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-4xl mb-3">🍃</p>
+                <p className="text-gray-500">Belum ada sampah yang discan.</p>
+                <p className="text-sm text-gray-400 mt-2">Yuk scan sampahmu sekarang!</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Looping data logs untuk ditampilkan */}
+                {logs.map((log) => (
+                  <div key={log._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                      {/* Ikon berdasarkan jenis sampah */}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl
+                        ${log.waste_type === 'Plastik' ? 'bg-orange-100 text-orange-600' : 
+                          log.waste_type === 'Organik' ? 'bg-green-100 text-green-600' : 
+                          'bg-blue-100 text-blue-600'}`}>
+                        {log.waste_type === 'Plastik' ? '🥤' : log.waste_type === 'Organik' ? '🍂' : '♻️'}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-800">{log.waste_type}</h3>
+                        <p className="text-xs text-gray-500">
+                            {new Date(log.timestamp).toLocaleDateString()} • {log.fakultas}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-[#667eea]">{log.confidence}%</span>
+                      <p className="text-[10px] text-gray-400">Akurasi</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-          <div className="mt-6 text-center">
-            <Link
-              href="/scan"
-              className="inline-block bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:-translate-y-0.5"
-            >
-              Scan Sampah Baru
-            </Link>
+            <div className="mt-6 text-center">
+              <Link
+                href="/scan"
+                className="inline-block bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:-translate-y-0.5"
+              >
+                Scan Sampah Baru
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -384,9 +538,9 @@ export default function Profile() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 points={(() => {
-                  const data = chartData[chartPeriod];
-                  const maxValue = Math.max(...data.map(d => d.value));
-                  const stepX = 800 / (data.length - 1);
+                  const data = displayStats.chartData[chartPeriod];
+                  const maxValue = Math.max(...data.map(d => d.value)) || 1;
+                  const stepX = 800 / (data.length - 1 || 1);
                   return data.map((point, index) => {
                     const x = index * stepX;
                     const y = 200 - (point.value / maxValue) * 170 - 10;
@@ -399,9 +553,9 @@ export default function Profile() {
               <polygon
                 fill="url(#areaGradient)"
                 points={(() => {
-                  const data = chartData[chartPeriod];
-                  const maxValue = Math.max(...data.map(d => d.value));
-                  const stepX = 800 / (data.length - 1);
+                  const data = displayStats.chartData[chartPeriod];
+                  const maxValue = Math.max(...data.map(d => d.value)) || 1;
+                  const stepX = 800 / (data.length - 1 || 1);
                   const points = data.map((point, index) => {
                     const x = index * stepX;
                     const y = 200 - (point.value / maxValue) * 170 - 10;
@@ -426,10 +580,10 @@ export default function Profile() {
 
             {/* X-axis labels */}
             <div className="flex justify-between mt-2 text-xs text-gray-500">
-              {chartData[chartPeriod]
+              {displayStats.chartData[chartPeriod]
                 .filter((_, index) => {
                   if (chartPeriod === 'year') return true;
-                  return index % 5 === 0 || index === chartData[chartPeriod].length - 1;
+                  return index % 5 === 0 || index === displayStats.chartData[chartPeriod].length - 1;
                 })
                 .map((point, index) => (
                   <span key={index}>{point.label}</span>

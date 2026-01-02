@@ -51,6 +51,7 @@ export default function Login() {
       // Simpan user data ASLI dari Database ke localStorage
       // Fungsi setUser ada di utils/authUtils.js
       setUser({
+        id: data.user._id || data.user.id, // Tambahkan ID dari database
         email: data.user.email,
         name: data.user.name,
         level: data.user.level, // Load Level dari DB

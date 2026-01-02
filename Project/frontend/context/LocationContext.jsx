@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const LocationContext = createContext();
 
@@ -16,6 +16,11 @@ export const LocationProvider = ({ children }) => {
   const [selectedFakultas, setSelectedFakultas] = useState('');
   const [selectedLokasi, setSelectedLokasi] = useState('');
   const [lokasiData, setLokasiData] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const setLocation = (fakultas, lokasi, data) => {
     setSelectedFakultas(fakultas);
@@ -32,6 +37,10 @@ export const LocationProvider = ({ children }) => {
   const isLocationSet = () => {
     return selectedFakultas !== '' && selectedLokasi !== '';
   };
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <LocationContext.Provider

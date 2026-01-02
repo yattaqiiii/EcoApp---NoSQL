@@ -89,36 +89,53 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ message: "Terjadi kesalahan server" });
     }
 });
-// API Endpoint untuk menyimpan hasil scan
 app.post('/api/scan', async (req, res) => {
     try {
-        // Ambil data yang dikirim dari frontend
-        const { waste_type, confidence, fakultas, lokasi_id } = req.body;
+        // Ambil user_id dari body request
+        const { waste_type, confidence, fakultas, lokasi_id, user_id } = req.body;
 
-        // Validasi sederhana
-        if (!waste_type || !confidence || !fakultas) {
-            return res.status(400).json({ message: "Data tidak lengkap" });
+        if (!waste_type || !confidence || !fakultas || !user_id) {
+            return res.status(400).json({ message: "Data tidak lengkap (User ID wajib ada)" });
         }
 
-        // Buat data baru menggunakan Model Mongoose
         const newLog = new WasteLog({
+            user_id, // Simpan ID pemilik
             waste_type,
             confidence,
             fakultas,
-            lokasi_id: lokasi_id || fakultas, // Gunakan fakultas jika lokasi_id kosong
+            lokasi_id: lokasi_id || fakultas,
             timestamp: new Date()
         });
 
-        // Simpan ke MongoDB Atlas
         const savedLog = await newLog.save();
 
-        res.status(201).json({
-            message: "Scan berhasil disimpan!",
-            data: savedLog
-        });
+        // [OPSIONAL] Update XP User di sini jika mau
+        // await User.findByIdAndUpdate(user_id, { $inc: { total_xp: 10 } });
+
+        res.status(201).json({ message: "Scan berhasil!", data: savedLog });
     } catch (error) {
         console.error("Error saving scan:", error);
-        res.status(500).json({ message: "Gagal menyimpan data", error: error.message });
+        res.status(500).json({ message: "Gagal menyimpan data" });
+    }
+})
+
+// [BARU] 2. API HISTORY PER USER
+app.get('/api/waste-logs', async (req, res) => {
+    try {
+        const { userId } = req.query; // Ambil dari ?userId=...
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID diperlukan" });
+        }
+
+        // Cari sampah yang user_id-nya COCOK dengan userId yang diminta
+        const logs = await WasteLog.find({ user_id: userId })
+                                   .sort({ timestamp: -1 }); // Urutkan dari yang terbaru
+
+        res.json({ data: logs });
+    } catch (error) {
+        console.error("Error fetching logs:", error);
+        res.status(500).json({ message: "Gagal mengambil history" });
     }
 });
 
