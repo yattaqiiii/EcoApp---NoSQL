@@ -15,9 +15,9 @@ export default function AdminDashboard() {
   const fetchDashboardStats = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/admin/stats")
+      const response = await fetch("http://localhost:5000/api/admin/stats")
       const result = await response.json()
-      
+
       if (result.success) {
         setStats(result.data)
       }
@@ -70,11 +70,11 @@ export default function AdminDashboard() {
     },
   ]
 
-  const formatTimeAgo = (timestamp) => {
+  const formatTimeAgo = timestamp => {
     const now = new Date()
     const time = new Date(timestamp)
     const diff = Math.floor((now - time) / 1000) // seconds
-    
+
     if (diff < 60) return `${diff}s ago`
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
@@ -135,24 +135,20 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {(stats?.recentActivities || []).slice(0, 5).map((activity) => (
+              {(stats?.recentActivities || []).slice(0, 5).map(activity => (
                 <div key={activity._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex-1">
                     <p className="font-medium text-slate-900">{activity.username}</p>
                     <p className="text-sm text-slate-600">Scanned {activity.waste_type} waste</p>
-                    <p className="text-xs text-slate-500 mt-1">Confidence: {(activity.confidence * 100).toFixed(1)}%</p>
+                    <p className="text-xs text-slate-500 mt-1">Confidence: {activity.confidence > 1 ? activity.confidence.toFixed(1) : (activity.confidence * 100).toFixed(1)}%</p>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      +{activity.xp_earned || 0} XP
-                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">+{activity.xp_earned || 0} XP</span>
                     <p className="text-xs text-slate-500 mt-1">{formatTimeAgo(activity.timestamp)}</p>
                   </div>
                 </div>
               ))}
-              {(!stats?.recentActivities || stats.recentActivities.length === 0) && (
-                <p className="text-center text-slate-500 py-4">No recent activities</p>
-              )}
+              {(!stats?.recentActivities || stats.recentActivities.length === 0) && <p className="text-center text-slate-500 py-4">No recent activities</p>}
             </div>
           </CardContent>
         </Card>
@@ -180,9 +176,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-              {wasteTypes.length === 0 && (
-                <p className="text-center text-slate-500 py-4">No data available</p>
-              )}
+              {wasteTypes.length === 0 && <p className="text-center text-slate-500 py-4">No data available</p>}
             </div>
           </CardContent>
         </Card>

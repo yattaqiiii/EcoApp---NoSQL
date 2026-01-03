@@ -18,6 +18,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -34,9 +36,9 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/users")
+      const response = await fetch("http://localhost:5000/api/admin/users")
       const result = await response.json()
-      
+
       if (result.success) {
         setUsers(result.data)
       }
@@ -47,14 +49,26 @@ export default function UsersPage() {
     }
   }
 
-  const filteredUsers = users.filter(user => 
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredUsers = users.filter(user => user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentUsers = filteredUsers.slice(startIndex, endIndex)
+
+  const goToPage = page => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   const handleAdd = async () => {
     try {
-      const response = await fetch("/api/users", {
+      const response = await fetch("http://localhost:5000/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,7 +79,7 @@ export default function UsersPage() {
           badges: formData.badges ? formData.badges.split(",").map(b => b.trim()) : [],
         }),
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchUsers()
@@ -80,7 +94,7 @@ export default function UsersPage() {
 
   const handleEdit = async () => {
     try {
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${selectedUser._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,7 +105,7 @@ export default function UsersPage() {
           badges: formData.badges.split(",").map(b => b.trim()),
         }),
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchUsers()
@@ -104,14 +118,14 @@ export default function UsersPage() {
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (!confirm("Are you sure you want to delete this user?")) return
-    
+
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
         method: "DELETE",
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchUsers()
@@ -192,9 +206,7 @@ export default function UsersPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-slate-600">Avg Level</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">
-                {users.length > 0 ? (users.reduce((sum, u) => sum + (u.level || 0), 0) / users.length).toFixed(1) : "0"}
-              </p>
+              <p className="text-3xl font-bold text-blue-600 mt-1">{users.length > 0 ? (users.reduce((sum, u) => sum + (u.level || 0), 0) / users.length).toFixed(1) : "0"}</p>
             </div>
           </CardContent>
         </Card>
@@ -202,9 +214,7 @@ export default function UsersPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-slate-600">Total XP</p>
-              <p className="text-3xl font-bold text-orange-600 mt-1">
-                {users.reduce((sum, u) => sum + (u.total_xp || 0), 0).toLocaleString()}
-              </p>
+              <p className="text-3xl font-bold text-orange-600 mt-1">{users.reduce((sum, u) => sum + (u.total_xp || 0), 0).toLocaleString()}</p>
             </div>
           </CardContent>
         </Card>
@@ -261,7 +271,7 @@ export default function UsersPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.map(user => (
+                currentUsers.map(user => (
                   <TableRow key={user._id}>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell className="text-sm text-slate-600">{user.email}</TableCell>
@@ -301,6 +311,41 @@ export default function UsersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {filteredUsers.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+                  Previous
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    if (page === 1 || page === totalPages) return true
+                    if (Math.abs(page - currentPage) <= 1) return true
+                    return false
+                  })
+                  .map((page, index, array) => (
+                    <div key={page} className="flex items-center gap-2">
+                      {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400">...</span>}
+                      <Button variant={currentPage === page ? "default" : "outline"} size="sm" onClick={() => goToPage(page)} className={currentPage === page ? "bg-green-600 hover:bg-green-700" : ""}>
+                        {page}
+                      </Button>
+                    </div>
+                  ))}
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

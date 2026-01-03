@@ -20,17 +20,18 @@ export default function WasteLogsPage() {
   const [wasteLogs, setWasteLogs] = useState([])
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const [formData, setFormData] = useState({
     user_id: "",
     waste_type: "",
     confidence: "",
     fakultas: "",
     lokasi_id: "",
-    image_url: "",
   })
 
-  const wasteTypes = ["Plastik", "Organik", "Kertas", "Logam", "Kaca", "Residu", "Botol Plastik"]
-  const fakultasList = ["FPTI", "FMIPA", "FEB", "FH", "FISIP", "FT"]
+  const wasteTypes = ["Organik", "Anorganik", "Botol Plastik", "Kertas", "Residu", "B3", "Tidak Ada Label"]
+  const fakultasList = ["FPTI", "FPMIPA", "FPEB", "FPBS", "FPIPS", "FPOK", "FIP", "FK", "FPSD"]
 
   // Fetch data
   useEffect(() => {
@@ -41,9 +42,9 @@ export default function WasteLogsPage() {
   const fetchWasteLogs = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/waste-logs")
+      const response = await fetch("http://localhost:5000/api/admin/waste-logs")
       const result = await response.json()
-      
+
       if (result.success) {
         setWasteLogs(result.data)
       }
@@ -56,9 +57,9 @@ export default function WasteLogsPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/users")
+      const response = await fetch("http://localhost:5000/api/admin/users")
       const result = await response.json()
-      
+
       if (result.success) {
         setUsers(result.data)
       }
@@ -68,21 +69,34 @@ export default function WasteLogsPage() {
   }
 
   // Get username from user_id
-  const getUsernameById = (userId) => {
+  const getUsernameById = userId => {
     const user = users.find(u => u._id === userId)
     return user?.username || "Unknown User"
   }
 
   const filteredLogs = wasteLogs.filter(log => {
     const username = getUsernameById(log.user_id)
-    return username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-           log.waste_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           log.fakultas?.toLowerCase().includes(searchTerm.toLowerCase())
+    return username.toLowerCase().includes(searchTerm.toLowerCase()) || log.waste_type?.toLowerCase().includes(searchTerm.toLowerCase()) || log.fakultas?.toLowerCase().includes(searchTerm.toLowerCase())
   })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentLogs = filteredLogs.slice(startIndex, endIndex)
+
+  const goToPage = page => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   const handleAdd = async () => {
     try {
-      const response = await fetch("/api/waste-logs", {
+      const response = await fetch("http://localhost:5000/api/admin/waste-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,7 +108,7 @@ export default function WasteLogsPage() {
           image_url: formData.image_url,
         }),
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchWasteLogs()
@@ -109,7 +123,7 @@ export default function WasteLogsPage() {
 
   const handleEdit = async () => {
     try {
-      const response = await fetch(`/api/waste-logs/${selectedLog._id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/waste-logs/${selectedLog._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -121,7 +135,7 @@ export default function WasteLogsPage() {
           image_url: formData.image_url,
         }),
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchWasteLogs()
@@ -134,14 +148,14 @@ export default function WasteLogsPage() {
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (!confirm("Are you sure you want to delete this log?")) return
-    
+
     try {
-      const response = await fetch(`/api/waste-logs/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/waste-logs/${id}`, {
         method: "DELETE",
       })
-      
+
       const result = await response.json()
       if (result.success) {
         await fetchWasteLogs()
@@ -152,7 +166,7 @@ export default function WasteLogsPage() {
     }
   }
 
-  const openEditDialog = (log) => {
+  const openEditDialog = log => {
     setSelectedLog(log)
     setFormData({
       user_id: log.user_id,
@@ -165,7 +179,7 @@ export default function WasteLogsPage() {
     setIsEditDialogOpen(true)
   }
 
-  const openViewDialog = (log) => {
+  const openViewDialog = log => {
     setSelectedLog(log)
     setIsViewDialogOpen(true)
   }
@@ -259,14 +273,14 @@ export default function WasteLogsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredLogs.map(log => (
+                currentLogs.map(log => (
                   <TableRow key={log._id}>
                     <TableCell className="font-medium">{getUsernameById(log.user_id)}</TableCell>
                     <TableCell>
                       <Badge className={getWasteTypeBadgeColor(log.waste_type)}>{log.waste_type}</Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm font-medium text-green-600">{(log.confidence * 100).toFixed(1)}%</span>
+                      <span className="text-sm font-medium text-green-600">{log.confidence > 1 ? log.confidence.toFixed(1) : (log.confidence * 100).toFixed(1)}%</span>
                     </TableCell>
                     <TableCell className="text-sm text-slate-600">{log.fakultas}</TableCell>
                     <TableCell className="text-sm text-slate-600">{log.lokasi_id}</TableCell>
@@ -291,6 +305,41 @@ export default function WasteLogsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {filteredLogs.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredLogs.length)} of {filteredLogs.length} logs
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+                  Previous
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    if (page === 1 || page === totalPages) return true
+                    if (Math.abs(page - currentPage) <= 1) return true
+                    return false
+                  })
+                  .map((page, index, array) => (
+                    <div key={page} className="flex items-center gap-2">
+                      {index > 0 && array[index - 1] !== page - 1 && <span className="text-slate-400">...</span>}
+                      <Button variant={currentPage === page ? "default" : "outline"} size="sm" onClick={() => goToPage(page)} className={currentPage === page ? "bg-green-600 hover:bg-green-700" : ""}>
+                        {page}
+                      </Button>
+                    </div>
+                  ))}
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -352,10 +401,6 @@ export default function WasteLogsPage() {
             <div className="space-y-2">
               <Label htmlFor="lokasi_id">Lokasi ID</Label>
               <Input id="lokasi_id" type="text" placeholder="FPTI_COE" value={formData.lokasi_id} onChange={e => setFormData({ ...formData, lokasi_id: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image_url">Image URL (Optional)</Label>
-              <Input id="image_url" type="text" placeholder="/images/waste.jpg" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
@@ -430,10 +475,6 @@ export default function WasteLogsPage() {
               <Label htmlFor="edit_lokasi_id">Lokasi ID</Label>
               <Input id="edit_lokasi_id" type="text" value={formData.lokasi_id} onChange={e => setFormData({ ...formData, lokasi_id: e.target.value })} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_image_url">Image URL</Label>
-              <Input id="edit_image_url" type="text" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} />
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -482,10 +523,6 @@ export default function WasteLogsPage() {
               <div className="space-y-2">
                 <Label>XP Earned</Label>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">+{selectedLog.xp_earned} XP</span>
-              </div>
-              <div className="space-y-2">
-                <Label>Image URL</Label>
-                <p className="text-sm text-slate-600 break-all">{selectedLog.image_url}</p>
               </div>
               <div className="space-y-2">
                 <Label>Timestamp</Label>

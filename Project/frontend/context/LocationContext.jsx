@@ -1,45 +1,36 @@
-'use client';
+"use client"
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react"
 
-const LocationContext = createContext();
+const LocationContext = createContext()
 
 export const useLocation = () => {
-  const context = useContext(LocationContext);
+  const context = useContext(LocationContext)
   if (!context) {
-    throw new Error('useLocation must be used within LocationProvider');
+    throw new Error("useLocation must be used within LocationProvider")
   }
-  return context;
-};
+  return context
+}
 
 export const LocationProvider = ({ children }) => {
-  const [selectedFakultas, setSelectedFakultas] = useState('');
-  const [selectedLokasi, setSelectedLokasi] = useState('');
-  const [lokasiData, setLokasiData] = useState(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [selectedFakultas, setSelectedFakultas] = useState("")
+  const [selectedLokasi, setSelectedLokasi] = useState("")
+  const [lokasiData, setLokasiData] = useState(null)
 
   const setLocation = (fakultas, lokasi, data) => {
-    setSelectedFakultas(fakultas);
-    setSelectedLokasi(lokasi);
-    setLokasiData(data);
-  };
+    setSelectedFakultas(fakultas)
+    setSelectedLokasi(lokasi)
+    setLokasiData(data)
+  }
 
   const clearLocation = () => {
-    setSelectedFakultas('');
-    setSelectedLokasi('');
-    setLokasiData(null);
-  };
+    setSelectedFakultas("")
+    setSelectedLokasi("")
+    setLokasiData(null)
+  }
 
   const isLocationSet = () => {
-    return selectedFakultas !== '' && selectedLokasi !== '';
-  };
-
-  if (!mounted) {
-    return <>{children}</>;
+    return selectedFakultas !== "" && selectedLokasi !== ""
   }
 
   return (
@@ -50,10 +41,10 @@ export const LocationProvider = ({ children }) => {
         lokasiData,
         setLocation,
         clearLocation,
-        isLocationSet
+        isLocationSet,
       }}
     >
       {children}
     </LocationContext.Provider>
-  );
-};
+  )
+}

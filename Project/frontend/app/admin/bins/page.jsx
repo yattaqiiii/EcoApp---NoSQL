@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Pencil, Trash2, Search, Eye, MapPin, Trash } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Plus, Pencil, Trash2, Search, Eye, MapPin, Loader2, Image as ImageIcon } from "lucide-react"
 
 export default function BinsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -18,167 +19,162 @@ export default function BinsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedBin, setSelectedBin] = useState(null)
+  const [bins, setBins] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    capacity: "",
-    current_fill: "",
-    waste_type: "",
-    status: "",
-    coordinates: "",
+    value: "",
+    label: "",
+    bins: [],
     description: "",
+    fakultas: "",
+    image_url: "",
   })
 
-  // Dummy data
-  const [bins, setBins] = useState([
-    {
-      _id: "bin_001",
-      name: "Tempat Sampah A1",
-      location: "Fakultas MIPA - Gedung Utama",
-      capacity: 100,
-      current_fill: 75,
-      waste_type: "Plastik",
-      status: "active",
-      coordinates: { lat: -7.771389, lng: 110.377778 },
-      description: "Tempat sampah khusus plastik di lantai 1",
-      last_emptied: "2026-01-01T08:00:00Z",
-      created_at: "2025-10-01T00:00:00Z",
-    },
-    {
-      _id: "bin_002",
-      name: "Tempat Sampah A2",
-      location: "Fakultas MIPA - Gedung Utama",
-      capacity: 100,
-      current_fill: 30,
-      waste_type: "Organik",
-      status: "active",
-      coordinates: { lat: -7.7714, lng: 110.3778 },
-      description: "Tempat sampah organik di lantai 1",
-      last_emptied: "2026-01-01T06:00:00Z",
-      created_at: "2025-10-01T00:00:00Z",
-    },
-    {
-      _id: "bin_003",
-      name: "Tempat Sampah B1",
-      location: "Fakultas MIPA - Lab Kimia",
-      capacity: 80,
-      current_fill: 90,
-      waste_type: "Kertas",
-      status: "full",
-      coordinates: { lat: -7.7715, lng: 110.3779 },
-      description: "Tempat sampah kertas di area lab",
-      last_emptied: "2025-12-30T14:00:00Z",
-      created_at: "2025-10-15T00:00:00Z",
-    },
-    {
-      _id: "bin_004",
-      name: "Tempat Sampah C1",
-      location: "Fakultas MIPA - Kantin",
-      capacity: 120,
-      current_fill: 45,
-      waste_type: "Organik",
-      status: "active",
-      coordinates: { lat: -7.7716, lng: 110.378 },
-      description: "Tempat sampah organik di area kantin",
-      last_emptied: "2026-01-01T10:00:00Z",
-      created_at: "2025-10-01T00:00:00Z",
-    },
-    {
-      _id: "bin_005",
-      name: "Tempat Sampah D1",
-      location: "Fakultas MIPA - Parkiran",
-      capacity: 100,
-      current_fill: 15,
-      waste_type: "Logam",
-      status: "maintenance",
-      coordinates: { lat: -7.7717, lng: 110.3781 },
-      description: "Tempat sampah logam - sedang perbaikan",
-      last_emptied: "2025-12-31T12:00:00Z",
-      created_at: "2025-11-01T00:00:00Z",
-    },
-  ])
+  const fakultasList = ["FPTI", "FPMIPA", "FPEB", "FPBS", "FPIPS", "FPOK", "FIP", "FK", "FPSD"]
+  const availableBinTypes = ["Organik", "Anorganik", "Botol Plastik", "Kertas", "Residu", "B3", "Tidak Ada Label"]
 
-  const wasteTypes = ["Plastik", "Organik", "Kertas", "Logam", "Kaca"]
-  const statuses = ["active", "full", "maintenance", "inactive"]
+  // Fetch bins from API
+  useEffect(() => {
+    fetchBins()
+  }, [])
 
-  const filteredBins = bins.filter(bin => bin.name.toLowerCase().includes(searchTerm.toLowerCase()) || bin.location.toLowerCase().includes(searchTerm.toLowerCase()) || bin.waste_type.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
-  const handleAdd = () => {
-    const coords = formData.coordinates.split(",").map(c => parseFloat(c.trim()))
-    const newBin = {
-      _id: `bin_${Date.now()}`,
-      name: formData.name,
-      location: formData.location,
-      capacity: parseInt(formData.capacity),
-      current_fill: parseInt(formData.current_fill) || 0,
-      waste_type: formData.waste_type,
-      status: formData.status,
-      coordinates: { lat: coords[0] || 0, lng: coords[1] || 0 },
-      description: formData.description,
-      last_emptied: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-    }
-    setBins([newBin, ...bins])
-    setIsAddDialogOpen(false)
-    resetForm()
-  }
+  const fetchBins = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch("http://localhost:5000/api/admin/bins")
+      const result = await response.json()
 
-  const handleEdit = () => {
-    const coords = formData.coordinates.split(",").map(c => parseFloat(c.trim()))
-    setBins(
-      bins.map(bin =>
-        bin._id === selectedBin._id
-          ? {
-              ...bin,
-              name: formData.name,
-              location: formData.location,
-              capacity: parseInt(formData.capacity),
-              current_fill: parseInt(formData.current_fill),
-              waste_type: formData.waste_type,
-              status: formData.status,
-              coordinates: { lat: coords[0], lng: coords[1] },
-              description: formData.description,
-            }
-          : bin
-      )
-    )
-    setIsEditDialogOpen(false)
-    resetForm()
-  }
-
-  const handleDelete = id => {
-    if (confirm("Are you sure you want to delete this bin?")) {
-      setBins(bins.filter(bin => bin._id !== id))
+      if (result.success) {
+        setBins(result.data)
+      }
+    } catch (error) {
+      console.error("Error fetching bins:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleEmptyBin = id => {
-    setBins(
-      bins.map(bin =>
-        bin._id === id
-          ? {
-              ...bin,
-              current_fill: 0,
-              last_emptied: new Date().toISOString(),
-              status: "active",
-            }
-          : bin
-      )
-    )
+  const handleImageChange = e => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleBinTypeToggle = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      bins: prev.bins.includes(type)
+        ? prev.bins.filter(b => b !== type)
+        : [...prev.bins, type]
+    }))
+  }
+
+  const handleAdd = async () => {
+    try {
+      const formDataToSend = new FormData()
+      formDataToSend.append("value", formData.value)
+      formDataToSend.append("label", formData.label)
+      formDataToSend.append("bins", JSON.stringify(formData.bins))
+      formDataToSend.append("description", formData.description)
+      formDataToSend.append("fakultas", formData.fakultas)
+      
+      if (imageFile) {
+        formDataToSend.append("image", imageFile)
+      }
+
+      const response = await fetch("http://localhost:5000/api/admin/bins", {
+        method: "POST",
+        body: formDataToSend,
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchBins()
+        setIsAddDialogOpen(false)
+        resetForm()
+      }
+    } catch (error) {
+      console.error("Error adding bin location:", error)
+    }
+  }
+
+  const handleEdit = async () => {
+    try {
+      const formDataToSend = new FormData()
+      formDataToSend.append("value", formData.value)
+      formDataToSend.append("label", formData.label)
+      formDataToSend.append("bins", JSON.stringify(formData.bins))
+      formDataToSend.append("description", formData.description)
+      formDataToSend.append("fakultas", formData.fakultas)
+      
+      if (imageFile) {
+        formDataToSend.append("image", imageFile)
+      } else {
+        formDataToSend.append("image_url", formData.image_url)
+      }
+
+      const response = await fetch(`http://localhost:5000/api/admin/bins/${selectedBin._id}`, {
+        method: "PUT",
+        body: formDataToSend,
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchBins()
+        setIsEditDialogOpen(false)
+        resetForm()
+      }
+    } catch (error) {
+      console.error("Error updating bin location:", error)
+    }
+  }
+
+  const handleDelete = async id => {
+    if (!confirm("Are you sure you want to delete this bin location?")) return
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/bins/${id}`, {
+        method: "DELETE",
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchBins()
+      }
+    } catch (error) {
+      console.error("Error deleting bin location:", error)
+    }
   }
 
   const openEditDialog = bin => {
     setSelectedBin(bin)
     setFormData({
-      name: bin.name,
-      location: bin.location,
-      capacity: bin.capacity.toString(),
-      current_fill: bin.current_fill.toString(),
-      waste_type: bin.waste_type,
-      status: bin.status,
-      coordinates: `${bin.coordinates.lat}, ${bin.coordinates.lng}`,
+      value: bin.value,
+      label: bin.label,
+      bins: bin.bins || [],
       description: bin.description,
+      fakultas: bin.fakultas,
+      image_url: bin.image_url,
     })
+    setImagePreview(bin.image_url ? `http://localhost:5000${bin.image_url}` : "")
     setIsEditDialogOpen(true)
   }
 
@@ -189,54 +185,48 @@ export default function BinsPage() {
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      location: "",
-      capacity: "",
-      current_fill: "",
-      waste_type: "",
-      status: "",
-      coordinates: "",
+      value: "",
+      label: "",
+      bins: [],
       description: "",
+      fakultas: "",
+      image_url: "",
     })
+    setImageFile(null)
+    setImagePreview("")
     setSelectedBin(null)
   }
 
-  const formatDate = dateString => {
-    return new Date(dateString).toLocaleString("id-ID", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    })
+  const filteredBins = bins.filter(bin => {
+    return (
+      bin.value?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bin.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bin.fakultas?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bin.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBins.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentBins = filteredBins.slice(startIndex, endIndex)
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
   }
 
-  const getStatusBadge = status => {
-    const styles = {
-      active: "bg-green-100 text-green-800",
-      full: "bg-red-100 text-red-800",
-      maintenance: "bg-yellow-100 text-yellow-800",
-      inactive: "bg-slate-100 text-slate-800",
-    }
-    return styles[status] || styles.inactive
-  }
-
-  const getWasteTypeBadgeColor = type => {
+  const getBinTypeBadgeColor = type => {
     const colors = {
-      Plastik: "bg-blue-100 text-blue-800",
-      Organik: "bg-green-100 text-green-800",
-      Kertas: "bg-yellow-100 text-yellow-800",
-      Logam: "bg-gray-100 text-gray-800",
-      Kaca: "bg-purple-100 text-purple-800",
+      "Organik": "bg-green-100 text-green-800",
+      "Anorganik": "bg-blue-100 text-blue-800",
+      "Botol Plastik": "bg-cyan-100 text-cyan-800",
+      "Kertas": "bg-yellow-100 text-yellow-800",
+      "Residu": "bg-gray-100 text-gray-800",
+      "B3": "bg-red-100 text-red-800",
+      "Tidak Ada Label": "bg-slate-100 text-slate-800",
     }
     return colors[type] || "bg-slate-100 text-slate-800"
-  }
-
-  const getFillPercentage = bin => {
-    return Math.round((bin.current_fill / bin.capacity) * 100)
-  }
-
-  const getFillColor = percentage => {
-    if (percentage >= 90) return "bg-red-500"
-    if (percentage >= 70) return "bg-yellow-500"
-    return "bg-green-500"
   }
 
   return (
@@ -244,57 +234,23 @@ export default function BinsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Tempat Sampah</h1>
-          <p className="text-slate-600 mt-1">Manage waste bins locations and capacity</p>
+          <h1 className="text-3xl font-bold text-slate-900">Lokasi Tempat Sampah</h1>
+          <p className="text-slate-600 mt-1">Kelola kumpulan tempat sampah per lokasi</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
           <Plus className="h-4 w-4 mr-2" />
-          Add Bin
+          Tambah Lokasi
         </Button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-slate-600">Total Bins</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{bins.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-slate-600">Active</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{bins.filter(b => b.status === "active").length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-slate-600">Full</p>
-              <p className="text-3xl font-bold text-red-600 mt-1">{bins.filter(b => b.status === "full").length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-slate-600">Maintenance</p>
-              <p className="text-3xl font-bold text-yellow-600 mt-1">{bins.filter(b => b.status === "maintenance").length}</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Search */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="Search by name, location, or waste type..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input placeholder="Cari berdasarkan ID, nama, fakultas..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -302,153 +258,257 @@ export default function BinsPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Waste Bins ({filteredBins.length})</CardTitle>
+          <CardTitle>Semua Lokasi ({filteredBins.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Waste Type</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Fill Level</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Gambar</TableHead>
+                <TableHead>ID Lokasi</TableHead>
+                <TableHead>Nama Lokasi</TableHead>
+                <TableHead>Fakultas</TableHead>
+                <TableHead>Jenis Tempat Sampah</TableHead>
+                <TableHead>Deskripsi</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBins.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-600" />
+                    <p className="text-slate-500 mt-2">Loading locations...</p>
+                  </TableCell>
+                </TableRow>
+              ) : filteredBins.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-slate-500">
-                    No bins found
+                    No locations found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredBins.map(bin => {
-                  const fillPercentage = getFillPercentage(bin)
-                  return (
-                    <TableRow key={bin._id}>
-                      <TableCell className="font-medium">{bin.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
-                          <MapPin className="h-3 w-3" />
-                          {bin.location}
+                currentBins.map(bin => (
+                  <TableRow key={bin._id}>
+                    <TableCell>
+                      {bin.image_url ? (
+                        <img src={`http://localhost:5000${bin.image_url}`} alt={bin.label} className="w-16 h-16 object-cover rounded-lg border" />
+                      ) : (
+                        <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
+                          <ImageIcon className="h-6 w-6 text-slate-400" />
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getWasteTypeBadgeColor(bin.waste_type)}>{bin.waste_type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {bin.current_fill} / {bin.capacity} L
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-600">{fillPercentage}%</span>
-                          </div>
-                          <div className="w-24 bg-slate-200 rounded-full h-2">
-                            <div className={`${getFillColor(fillPercentage)} h-2 rounded-full transition-all`} style={{ width: `${fillPercentage}%` }} />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadge(bin.status)}>{bin.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => openViewDialog(bin)} title="View details">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleEmptyBin(bin._id)} title="Empty bin" disabled={bin.current_fill === 0}>
-                            <Trash className="h-4 w-4 text-blue-600" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(bin)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(bin._id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{bin.value}</TableCell>
+                    <TableCell className="font-medium">{bin.label}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{bin.fakultas}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {bin.bins?.map((type, idx) => (
+                          <Badge key={idx} className={getBinTypeBadgeColor(type)}>
+                            {type}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600 max-w-xs truncate">{bin.description}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => openViewDialog(bin)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(bin)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(bin._id)}>
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {filteredBins.length > 0 && (
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-sm text-slate-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredBins.length)} of {filteredBins.length} locations
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                <div className="flex gap-1">
+                  {currentPage > 2 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => goToPage(1)}>1</Button>
+                      {currentPage > 3 && <span className="px-2 py-1">...</span>}
+                    </>
+                  )}
+                  
+                  {currentPage > 1 && (
+                    <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)}>
+                      {currentPage - 1}
+                    </Button>
+                  )}
+                  
+                  <Button variant="default" size="sm" className="bg-green-600">
+                    {currentPage}
+                  </Button>
+                  
+                  {currentPage < totalPages && (
+                    <Button variant="outline" size="sm" onClick={() => goToPage(currentPage + 1)}>
+                      {currentPage + 1}
+                    </Button>
+                  )}
+                  
+                  {currentPage < totalPages - 1 && (
+                    <>
+                      {currentPage < totalPages - 2 && <span className="px-2 py-1">...</span>}
+                      <Button variant="outline" size="sm" onClick={() => goToPage(totalPages)}>
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Waste Bin</DialogTitle>
-            <DialogDescription>Add a new waste bin to the system</DialogDescription>
+            <DialogTitle>Tambah Lokasi Baru</DialogTitle>
+            <DialogDescription>Tambahkan kumpulan tempat sampah untuk lokasi tertentu</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Tempat Sampah A1" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              <Label htmlFor="value">ID Lokasi *</Label>
+              <Input 
+                id="value" 
+                placeholder="FIP_BESAR" 
+                value={formData.value} 
+                onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} 
+              />
+              <p className="text-xs text-slate-500">Format: FAKULTAS_NAMA (contoh: FIP_BESAR)</p>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="waste_type">Waste Type</Label>
-              <Select value={formData.waste_type} onValueChange={value => setFormData({ ...formData, waste_type: value })}>
+              <Label htmlFor="label">Nama Lokasi *</Label>
+              <Input 
+                id="label" 
+                placeholder="FIP Besar" 
+                value={formData.label} 
+                onChange={e => setFormData({ ...formData, label: e.target.value })} 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fakultas">Fakultas *</Label>
+              <Select value={formData.fakultas} onValueChange={value => setFormData({ ...formData, fakultas: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Pilih fakultas" />
                 </SelectTrigger>
                 <SelectContent>
-                  {wasteTypes.map(type => (
-                    <SelectItem key={type} value={type}>
+                  {fakultasList.map(fak => (
+                    <SelectItem key={fak} value={fak}>
+                      {fak}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jenis Tempat Sampah * (Pilih minimal 1)</Label>
+              <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                {availableBinTypes.map((type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`add-${type}`}
+                      checked={formData.bins.includes(type)}
+                      onCheckedChange={() => handleBinTypeToggle(type)}
+                    />
+                    <label
+                      htmlFor={`add-${type}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
                       {type}
-                    </SelectItem>
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {formData.bins.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {formData.bins.map((type, idx) => (
+                    <Badge key={idx} className={getBinTypeBadgeColor(type)}>
+                      {type}
+                    </Badge>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="Fakultas MIPA - Gedung Utama" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
-            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity (Liters)</Label>
-              <Input id="capacity" type="number" placeholder="100" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: e.target.value })} />
+              <Label htmlFor="description">Deskripsi *</Label>
+              <Textarea 
+                id="description" 
+                placeholder="Area utama FIP" 
+                value={formData.description} 
+                onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                rows={3}
+              />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="current_fill">Current Fill (Liters)</Label>
-              <Input id="current_fill" type="number" placeholder="0" value={formData.current_fill} onChange={e => setFormData({ ...formData, current_fill: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={value => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="coordinates">Coordinates (lat, lng)</Label>
-              <Input id="coordinates" placeholder="-7.771389, 110.377778" value={formData.coordinates} onChange={e => setFormData({ ...formData, coordinates: e.target.value })} />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Additional information about this bin..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              <Label htmlFor="image">Gambar Lokasi (Opsional)</Label>
+              <Input 
+                id="image" 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border" />
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
+              Batal
             </Button>
-            <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
-              Add Bin
+            <Button 
+              onClick={handleAdd} 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}
+            >
+              Tambah Lokasi
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -456,73 +516,111 @@ export default function BinsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Waste Bin</DialogTitle>
-            <DialogDescription>Update waste bin information</DialogDescription>
+            <DialogTitle>Edit Lokasi</DialogTitle>
+            <DialogDescription>Update informasi kumpulan tempat sampah</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_name">Name</Label>
-              <Input id="edit_name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              <Label htmlFor="edit_value">ID Lokasi *</Label>
+              <Input 
+                id="edit_value" 
+                value={formData.value} 
+                onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} 
+              />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="edit_waste_type">Waste Type</Label>
-              <Select value={formData.waste_type} onValueChange={value => setFormData({ ...formData, waste_type: value })}>
+              <Label htmlFor="edit_label">Nama Lokasi *</Label>
+              <Input 
+                id="edit_label" 
+                value={formData.label} 
+                onChange={e => setFormData({ ...formData, label: e.target.value })} 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit_fakultas">Fakultas *</Label>
+              <Select value={formData.fakultas} onValueChange={value => setFormData({ ...formData, fakultas: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {wasteTypes.map(type => (
-                    <SelectItem key={type} value={type}>
+                  {fakultasList.map(fak => (
+                    <SelectItem key={fak} value={fak}>
+                      {fak}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jenis Tempat Sampah *</Label>
+              <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                {availableBinTypes.map((type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`edit-${type}`}
+                      checked={formData.bins.includes(type)}
+                      onCheckedChange={() => handleBinTypeToggle(type)}
+                    />
+                    <label
+                      htmlFor={`edit-${type}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
                       {type}
-                    </SelectItem>
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {formData.bins.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {formData.bins.map((type, idx) => (
+                    <Badge key={idx} className={getBinTypeBadgeColor(type)}>
+                      {type}
+                    </Badge>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_location">Location</Label>
-              <Input id="edit_location" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
-            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="edit_capacity">Capacity (Liters)</Label>
-              <Input id="edit_capacity" type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: e.target.value })} />
+              <Label htmlFor="edit_description">Deskripsi *</Label>
+              <Textarea 
+                id="edit_description" 
+                value={formData.description} 
+                onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                rows={3}
+              />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="edit_current_fill">Current Fill (Liters)</Label>
-              <Input id="edit_current_fill" type="number" value={formData.current_fill} onChange={e => setFormData({ ...formData, current_fill: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_status">Status</Label>
-              <Select value={formData.status} onValueChange={value => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_coordinates">Coordinates (lat, lng)</Label>
-              <Input id="edit_coordinates" value={formData.coordinates} onChange={e => setFormData({ ...formData, coordinates: e.target.value })} />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_description">Description</Label>
-              <Textarea id="edit_description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              <Label htmlFor="edit_image">Gambar Lokasi</Label>
+              <Input 
+                id="edit_image" 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border" />
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); }}>
+              Batal
             </Button>
-            <Button onClick={handleEdit} className="bg-green-600 hover:bg-green-700">
-              Save Changes
+            <Button 
+              onClick={handleEdit} 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}
+            >
+              Simpan Perubahan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -532,65 +630,73 @@ export default function BinsPage() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Waste Bin Details</DialogTitle>
+            <DialogTitle>Detail Lokasi</DialogTitle>
           </DialogHeader>
           {selectedBin && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label>Bin ID</Label>
-                <p className="text-sm text-slate-600">{selectedBin._id}</p>
+            <div className="space-y-4">
+              {selectedBin.image_url && (
+                <div className="w-full">
+                  <img 
+                    src={`http://localhost:5000${selectedBin.image_url}`} 
+                    alt={selectedBin.label} 
+                    className="w-full h-64 object-cover rounded-lg border"
+                  />
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>ID Lokasi</Label>
+                  <p className="text-sm font-mono bg-slate-100 p-2 rounded">{selectedBin.value}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Nama Lokasi</Label>
+                  <p className="text-sm font-medium">{selectedBin.label}</p>
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label>Name</Label>
-                <p className="text-sm font-medium">{selectedBin.name}</p>
+                <Label>Fakultas</Label>
+                <Badge variant="outline" className="text-sm">{selectedBin.fakultas}</Badge>
               </div>
+
               <div className="space-y-2">
-                <Label>Waste Type</Label>
-                <Badge className={getWasteTypeBadgeColor(selectedBin.waste_type)}>{selectedBin.waste_type}</Badge>
+                <Label>Jenis Tempat Sampah ({selectedBin.bins?.length || 0})</Label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBin.bins?.map((type, idx) => (
+                    <Badge key={idx} className={getBinTypeBadgeColor(type)}>
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Location</Label>
-                <p className="text-sm text-slate-600 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {selectedBin.location}
-                </p>
-              </div>
+
               <div className="space-y-2">
-                <Label>Capacity</Label>
-                <p className="text-sm font-medium">{selectedBin.capacity} Liters</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Current Fill</Label>
-                <p className="text-sm font-medium">
-                  {selectedBin.current_fill} Liters ({getFillPercentage(selectedBin)}%)
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Badge className={getStatusBadge(selectedBin.status)}>{selectedBin.status}</Badge>
-              </div>
-              <div className="space-y-2">
-                <Label>Coordinates</Label>
-                <p className="text-sm text-slate-600">
-                  {selectedBin.coordinates.lat}, {selectedBin.coordinates.lng}
-                </p>
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label>Description</Label>
+                <Label>Deskripsi</Label>
                 <p className="text-sm text-slate-600">{selectedBin.description}</p>
               </div>
+
               <div className="space-y-2">
-                <Label>Last Emptied</Label>
-                <p className="text-sm text-slate-600">{formatDate(selectedBin.last_emptied)}</p>
+                <Label>Database ID</Label>
+                <p className="text-xs text-slate-500 font-mono">{selectedBin._id}</p>
               </div>
-              <div className="space-y-2">
-                <Label>Created</Label>
-                <p className="text-sm text-slate-600">{formatDate(selectedBin.created_at)}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Dibuat</Label>
+                  <p className="text-xs text-slate-500">{new Date(selectedBin.createdAt).toLocaleString('id-ID')}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Diupdate</Label>
+                  <p className="text-xs text-slate-500">{new Date(selectedBin.updatedAt).toLocaleString('id-ID')}</p>
+                </div>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
