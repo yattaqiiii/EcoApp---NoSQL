@@ -2,16 +2,28 @@ import mongoose from "mongoose"
 
 const binSchema = new mongoose.Schema(
   {
-    fakultas: {
+    value: {
       type: String,
       required: true,
+      unique: true,
+      trim: true,
     },
-    lokasi: {
+    label: {
       type: String,
       required: true,
       trim: true,
     },
-    jenis: {
+    bins: {
+      type: [String],
+      required: true,
+      default: [],
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fakultas: {
       type: String,
       required: true,
     },

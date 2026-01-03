@@ -343,13 +343,13 @@ router.get("/stats", async (req, res) => {
 // GET all bins with filters
 router.get("/bins", async (req, res) => {
   try {
-    const { search, fakultas, jenis, status } = req.query
+    const { search, fakultas } = req.query
 
     let query = {}
 
     // Search filter
     if (search) {
-      query.$or = [{ name: { $regex: search, $options: "i" } }, { lokasi: { $regex: search, $options: "i" } }]
+      query.$or = [{ value: { $regex: search, $options: "i" } }, { label: { $regex: search, $options: "i" } }, { description: { $regex: search, $options: "i" } }]
     }
 
     // Fakultas filter
@@ -357,17 +357,7 @@ router.get("/bins", async (req, res) => {
       query.fakultas = fakultas
     }
 
-    // Jenis filter
-    if (jenis) {
-      query.jenis = jenis
-    }
-
-    // Status filter
-    if (status) {
-      query.status = status
-    }
-
-    const bins = await Bin.find(query).sort({ created_at: -1 })
+    const bins = await Bin.find(query).sort({ createdAt: -1 })
 
     res.json({
       success: true,
@@ -399,10 +389,34 @@ router.get("/bins/:id", async (req, res) => {
   }
 })
 
+// GET bin by value (location ID)
+router.get("/bins/by-value/:value", async (req, res) => {
+  try {
+    const bin = await Bin.findOne({ value: req.params.value })
+
+    if (!bin) {
+      return res.status(404).json({ success: false, error: "Bin location not found" })
+    }
+
+    res.json({
+      success: true,
+      data: bin,
+    })
+  } catch (error) {
+    console.error("Error fetching bin by value:", error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // POST create new bin
 router.post("/bins", uploadBinImage.single("image"), async (req, res) => {
   try {
     const binData = req.body
+
+    // Parse bins array if it's a string (from FormData)
+    if (typeof binData.bins === "string") {
+      binData.bins = JSON.parse(binData.bins)
+    }
 
     // If file uploaded, set image_url to the uploaded file path
     if (req.file) {
@@ -425,6 +439,11 @@ router.post("/bins", uploadBinImage.single("image"), async (req, res) => {
 router.put("/bins/:id", uploadBinImage.single("image"), async (req, res) => {
   try {
     const binData = req.body
+
+    // Parse bins array if it's a string (from FormData)
+    if (typeof binData.bins === "string") {
+      binData.bins = JSON.parse(binData.bins)
+    }
 
     // If file uploaded, set image_url to the uploaded file path
     if (req.file) {
