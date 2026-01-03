@@ -413,7 +413,7 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-lg font-bold text-[#10b981]">{Math.round(log.confidence)}%</span>
+                      <span className="text-lg font-bold text-[#10b981]">{Math.round(log.confidence * 100)}%</span>
                       <p className="text-[10px] text-gray-400 uppercase tracking-wide">Akurasi</p>
                     </div>
                   </div>

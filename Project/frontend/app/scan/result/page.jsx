@@ -21,11 +21,36 @@ export default function Result() {
   // Get data dari sessionStorage (dari Scan page)
   const [result, setResult] = useState(null);
   
+  // Bins data from backend
+  const [binsData, setBinsData] = useState([]);
+  const [isLoadingBins, setIsLoadingBins] = useState(true);
+  
   // XP & Level state
   const [xpEarned, setXpEarned] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentXP, setCurrentXP] = useState(0);
   const [xpToNextLevel, setXpToNextLevel] = useState(100);
+  
+  // Fetch bins data from backend
+  useEffect(() => {
+    const fetchBins = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/admin/bins');
+        if (response.ok) {
+          const result = await response.json();
+          // API returns { success: true, data: [...], count: ... }
+          setBinsData(result.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching bins:', error);
+        setBinsData([]); // Set empty array on error
+      } finally {
+        setIsLoadingBins(false);
+      }
+    };
+    
+    fetchBins();
+  }, []);
   
   useEffect(() => {
     const storedData = sessionStorage.getItem('scanResult');
@@ -65,19 +90,68 @@ export default function Result() {
   
   // State untuk accordion (track which fakultas/location is expanded)
   const [expandedFakultas, setExpandedFakultas] = useState({});
+  const [expandedLocationImages, setExpandedLocationImages] = useState({});
   
   const fakultasLabel = selectedFakultas 
     ? FAKULTAS_OPTIONS.find(f => f.value === selectedFakultas)?.label 
     : '';
   
+  // Helper functions untuk mengolah data dari backend
+  const findLocationsFromBackend = (fakultas, targetBin) => {
+    if (!binsData || binsData.length === 0) return [];
+    
+    return binsData.filter(bin => 
+      bin.fakultas === fakultas && 
+      bin.bins.some(b => binMatches(b, targetBin))
+    );
+  };
+  
+  const findFallbackLocationsFromBackend = (fakultas, fallbackBin) => {
+    if (!binsData || binsData.length === 0 || !fallbackBin) return [];
+    
+    return binsData.filter(bin => 
+      bin.fakultas === fakultas && 
+      bin.bins.some(b => binMatches(b, fallbackBin))
+    );
+  };
+  
+  const getAllLocationsWithBinFromBackend = (targetBin) => {
+    if (!binsData || binsData.length === 0) return {};
+    
+    const locationsByFakultas = {};
+    
+    binsData.forEach(bin => {
+      if (bin.bins.some(b => binMatches(b, targetBin))) {
+        if (!locationsByFakultas[bin.fakultas]) {
+          locationsByFakultas[bin.fakultas] = [];
+        }
+        locationsByFakultas[bin.fakultas].push(bin);
+      }
+    });
+    
+    return locationsByFakultas;
+  };
+  
   // Map waste type ke bin category
   const targetBin = result ? mapWasteTypeToBin(result.waste_type) : '';
   const fallbackBin = result ? getFallbackBin(result.waste_type) : null;
   
-  // Cari lokasi dengan fallback option
-  const locationResult = selectedFakultas && result
-    ? findLocationsWithFallback(selectedFakultas, result.waste_type)
-    : { hasPrimary: false, hasFallback: false, primaryLocations: [], fallbackLocations: [] };
+  // Cari lokasi menggunakan data dari backend
+  const primaryLocations = selectedFakultas && targetBin && !isLoadingBins
+    ? findLocationsFromBackend(selectedFakultas, targetBin)
+    : [];
+  
+  const fallbackLocations = selectedFakultas && fallbackBin && !isLoadingBins && primaryLocations.length === 0
+    ? findFallbackLocationsFromBackend(selectedFakultas, fallbackBin)
+    : [];
+  
+  const locationResult = {
+    hasPrimary: primaryLocations.length > 0,
+    hasFallback: fallbackLocations.length > 0,
+    primaryLocations: primaryLocations,
+    fallbackLocations: fallbackLocations,
+    fallbackBin: fallbackBin
+  };
   
   // Debug logging
   console.log('Debug Info:', {
@@ -85,11 +159,13 @@ export default function Result() {
     waste_type: result?.waste_type,
     targetBin,
     fallbackBin,
-    locationResult
+    locationResult,
+    binsData,
+    isLoadingBins
   });
   
   // Cari semua lokasi di fakultas lain yang punya bin spesifik
-  const allLocationsWithBin = targetBin ? findLocationsWithBin(targetBin) : {};
+  const allLocationsWithBin = targetBin && !isLoadingBins ? getAllLocationsWithBinFromBackend(targetBin) : {};
   
   // Check kondisi
   const hasPrimaryBin = locationResult.hasPrimary;
@@ -104,8 +180,31 @@ export default function Result() {
     }));
   };
 
+  // Toggle location image dropdown
+  const toggleLocationImage = (locationKey) => {
+    setExpandedLocationImages(prev => ({
+      ...prev,
+      [locationKey]: !prev[locationKey]
+    }));
+  };
+
   if (!result) {
     return null;
+  }
+
+  // Show loading state while fetching bins
+  if (isLoadingBins) {
+    return (
+      <>
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-5 py-5 min-h-[calc(100vh-80px)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#10b981] mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">Memuat data lokasi...</p>
+          </div>
+        </div>
+      </>
+    );
   }
 
   const getColorByCategory = (category) => {
@@ -224,34 +323,69 @@ export default function Result() {
               </p>
               
               <div className="mt-5 flex flex-col gap-4">
-                {locationResult.primaryLocations.map((lokasi, index) => (
-                  <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
-                    <div className="flex items-start gap-3 mb-3">
-                      <span className="text-2xl mt-0.5">📍</span>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
-                        <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                {locationResult.primaryLocations.map((lokasi, index) => {
+                  const locationKey = `primary-${index}`;
+                  const isImageExpanded = expandedLocationImages[locationKey];
+                  
+                  return (
+                    <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                      <div className="flex items-start gap-3 mb-3">
+                        <span className="text-2xl mt-0.5">📍</span>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                          <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {lokasi.bins.map((bin, binIndex) => (
-                          <span 
-                            key={binIndex} 
-                            className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
-                              binMatches(bin, targetBin) 
-                                ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
-                                : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
-                            }`}
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {lokasi.bins.map((bin, binIndex) => (
+                            <span 
+                              key={binIndex} 
+                              className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
+                                binMatches(bin, targetBin) 
+                                  ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
+                                  : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
+                              }`}
+                            >
+                              {bin}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Image Dropdown */}
+                      {lokasi.image_url && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <button
+                            onClick={() => toggleLocationImage(locationKey)}
+                            className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
                           >
-                            {bin}
-                          </span>
-                        ))}
-                      </div>
+                            <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                              <span>📷</span>
+                              Lihat Foto Lokasi
+                            </span>
+                            <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                              ▼
+                            </span>
+                          </button>
+                          {isImageExpanded && (
+                            <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
+                              <img 
+                                src={`http://localhost:5000${lokasi.image_url}`} 
+                                alt={`Foto lokasi ${lokasi.label}`}
+                                className="w-full h-auto object-cover rounded-lg shadow-md"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -271,34 +405,69 @@ export default function Result() {
                 </p>
                 
                 <div className="mt-5 flex flex-col gap-4">
-                  {locationResult.fallbackLocations.map((lokasi, index) => (
-                    <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
-                      <div className="flex items-start gap-3 mb-3">
-                        <span className="text-2xl mt-0.5">📍</span>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
-                          <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                  {locationResult.fallbackLocations.map((lokasi, index) => {
+                    const locationKey = `fallback-${index}`;
+                    const isImageExpanded = expandedLocationImages[locationKey];
+                    
+                    return (
+                      <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                        <div className="flex items-start gap-3 mb-3">
+                          <span className="text-2xl mt-0.5">📍</span>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                            <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
-                        <div className="flex flex-wrap gap-2">
-                          {lokasi.bins.map((bin, binIndex) => (
-                            <span 
-                              key={binIndex} 
-                              className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
-                                binMatches(bin, locationResult.fallbackBin) 
-                                  ? 'bg-[#2196f3] text-white border-[#2196f3] font-semibold shadow-[0_2px_8px_rgba(33,150,243,0.3)]' 
-                                  : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
-                              }`}
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {lokasi.bins.map((bin, binIndex) => (
+                              <span 
+                                key={binIndex} 
+                                className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
+                                  binMatches(bin, locationResult.fallbackBin) 
+                                    ? 'bg-[#2196f3] text-white border-[#2196f3] font-semibold shadow-[0_2px_8px_rgba(33,150,243,0.3)]' 
+                                    : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
+                                }`}
+                              >
+                                {bin}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Image Dropdown */}
+                        {lokasi.image_url && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <button
+                              onClick={() => toggleLocationImage(locationKey)}
+                              className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
                             >
-                              {bin}
-                            </span>
-                          ))}
-                        </div>
+                              <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                <span>📷</span>
+                                Lihat Foto Lokasi
+                              </span>
+                              <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                                ▼
+                              </span>
+                            </button>
+                            {isImageExpanded && (
+                              <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
+                                <img 
+                                  src={`http://localhost:5000${lokasi.image_url}`} 
+                                  alt={`Foto lokasi ${lokasi.label}`}
+                                  className="w-full h-auto object-cover rounded-lg shadow-md"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -337,34 +506,69 @@ export default function Result() {
                           
                           {isExpanded && (
                             <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
-                              {locations.map((lokasi, index) => (
-                                <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
-                                  <div className="flex items-start gap-3 mb-3">
-                                    <span className="text-2xl mt-0.5">📍</span>
-                                    <div className="flex-1">
-                                      <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
-                                      <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                              {locations.map((lokasi, index) => {
+                                const locationKey = `recom-${fakultasKey}-${index}`;
+                                const isImageExpanded = expandedLocationImages[locationKey];
+                                
+                                return (
+                                  <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                                    <div className="flex items-start gap-3 mb-3">
+                                      <span className="text-2xl mt-0.5">📍</span>
+                                      <div className="flex-1">
+                                        <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                                        <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="mt-3 pt-3 border-t border-gray-200">
-                                    <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
-                                    <div className="flex flex-wrap gap-2">
-                                      {lokasi.bins.map((bin, binIndex) => (
-                                        <span 
-                                          key={binIndex} 
-                                          className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
-                                            binMatches(bin, targetBin) 
-                                              ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
-                                              : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
-                                          }`}
+                                    <div className="mt-3 pt-3 border-t border-gray-200">
+                                      <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
+                                      <div className="flex flex-wrap gap-2">
+                                        {lokasi.bins.map((bin, binIndex) => (
+                                          <span 
+                                            key={binIndex} 
+                                            className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
+                                              binMatches(bin, targetBin) 
+                                                ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
+                                                : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
+                                            }`}
+                                          >
+                                            {bin}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Image Dropdown */}
+                                    {lokasi.image_url && (
+                                      <div className="mt-3 pt-3 border-t border-gray-200">
+                                        <button
+                                          onClick={() => toggleLocationImage(locationKey)}
+                                          className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
                                         >
-                                          {bin}
-                                        </span>
-                                      ))}
-                                    </div>
+                                          <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                            <span>📷</span>
+                                            Lihat Foto Lokasi
+                                          </span>
+                                          <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                                            ▼
+                                          </span>
+                                        </button>
+                                        {isImageExpanded && (
+                                          <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
+                                            <img 
+                                              src={`http://localhost:5000${lokasi.image_url}`} 
+                                              alt={`Foto lokasi ${lokasi.label}`}
+                                              className="w-full h-auto object-cover rounded-lg shadow-md"
+                                              onError={(e) => {
+                                                e.target.style.display = 'none';
+                                              }}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -412,34 +616,69 @@ export default function Result() {
                       
                       {isExpanded && (
                         <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
-                          {locations.map((lokasi, index) => (
-                            <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
-                              <div className="flex items-start gap-3 mb-3">
-                                <span className="text-2xl mt-0.5">📍</span>
-                                <div className="flex-1">
-                                  <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
-                                  <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                          {locations.map((lokasi, index) => {
+                            const locationKey = `nobin-${fakultasKey}-${index}`;
+                            const isImageExpanded = expandedLocationImages[locationKey];
+                            
+                            return (
+                              <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                                <div className="flex items-start gap-3 mb-3">
+                                  <span className="text-2xl mt-0.5">📍</span>
+                                  <div className="flex-1">
+                                    <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                                    <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
-                                <div className="flex flex-wrap gap-2">
-                                  {lokasi.bins.map((bin, binIndex) => (
-                                    <span 
-                                      key={binIndex} 
-                                      className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
-                                        bin.includes(targetBin) 
-                                          ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
-                                          : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
-                                      }`}
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <span className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Tempat sampah:</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {lokasi.bins.map((bin, binIndex) => (
+                                      <span 
+                                        key={binIndex} 
+                                        className={`py-1.5 px-3.5 rounded-2xl text-sm font-medium border ${
+                                          bin.includes(targetBin) 
+                                            ? 'bg-[#4caf50] text-white border-[#4caf50] font-semibold shadow-[0_2px_8px_rgba(76,175,80,0.3)]' 
+                                            : 'bg-[#e3f2fd] text-[#1976d2] border-[#bbdefb]'
+                                        }`}
+                                      >
+                                        {bin}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                {/* Image Dropdown */}
+                                {lokasi.image_url && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <button
+                                      onClick={() => toggleLocationImage(locationKey)}
+                                      className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
                                     >
-                                      {bin}
-                                    </span>
-                                  ))}
-                                </div>
+                                      <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                                        <span>📷</span>
+                                        Lihat Foto Lokasi
+                                      </span>
+                                      <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                                        ▼
+                                      </span>
+                                    </button>
+                                    {isImageExpanded && (
+                                      <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
+                                        <img 
+                                          src={`http://localhost:5000${lokasi.image_url}`} 
+                                          alt={`Foto lokasi ${lokasi.label}`}
+                                          className="w-full h-auto object-cover rounded-lg shadow-md"
+                                          onError={(e) => {
+                                            e.target.style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
