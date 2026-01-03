@@ -5,7 +5,7 @@ export const FAKULTAS_OPTIONS = [
   { value: 'FPBS', label: 'FPBS - Fakultas Pendidikan Bahasa dan Sastra' },
   { value: 'FPIPS', label: 'FPIPS - Fakultas Pendidikan Ilmu Pengetahuan Sosial' },
   { value: 'FPOK', label: 'FPOK - Fakultas Pendidikan Olahraga dan Kesehatan' },
-  { value: 'FPTI', label: 'FPTI - Fakultas Pendidikan Teknologi dan Kejuruan' },
+  { value: 'FPTI', label: 'FPTI - Fakultas Pendidikan Teknologi dan Industri' },
   { value: 'FPMIPA', label: 'FPMIPA - Fakultas Pendidikan Matematika dan Ilmu Pengetahuan Alam' },
   { value: 'FPEB', label: 'FPEB - Fakultas Pendidikan Ekonomi dan Bisnis' }
 ];
