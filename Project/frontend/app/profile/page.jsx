@@ -402,7 +402,9 @@ export default function Profile() {
                         {log.waste_type === 'Plastik' ? '🥤' : log.waste_type === 'Organik' ? '🍂' : '♻️'}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-800 text-lg">{log.waste_type}</h3>
+                        <h3 className="font-bold text-gray-800 text-lg">
+                          {log.waste_type?.includes('Botol Plasti') ? 'Botol Plastik' : log.waste_type}
+                        </h3>
                         <p className="text-xs text-gray-500">
                           {new Date(log.timestamp).toLocaleDateString('id-ID', { 
                             day: 'numeric', 

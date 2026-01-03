@@ -124,6 +124,12 @@ export default function Scan() {
       
       // Get waste info berdasarkan label
       const wasteInfo = getWasteInfo(prediction.label);
+      
+      // Normalize waste_type untuk handle label terpotong
+      const normalizedWasteType = prediction.label?.includes('Botol Plasti') 
+        ? 'Botol Plastik' 
+        : prediction.label;
+      
       // --- TAMBAHAN BARU: KIRIM KE BACKEND ---
       try {
         // UPDATE FETCH BODY
@@ -132,7 +138,7 @@ export default function Scan() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: currentUser.id, // [PENTING] Kirim ID User
-            waste_type: prediction.label,
+            waste_type: normalizedWasteType, // Gunakan normalized waste type
             confidence: prediction.confidence / 100, // Convert percentage to decimal (90% → 0.9)
             fakultas: selectedFakultas,
             lokasi_id: selectedFakultas
@@ -157,7 +163,7 @@ export default function Scan() {
       // Store data di sessionStorage karena Next.js tidak support state via router
       const resultData = {
         image: previewUrl,
-        waste_type: prediction.label,
+        waste_type: normalizedWasteType,
         category: wasteInfo.category,
         confidence: Math.round(prediction.confidence),
         disposal: wasteInfo.disposal,
