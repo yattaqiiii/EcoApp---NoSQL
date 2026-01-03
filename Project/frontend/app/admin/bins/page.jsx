@@ -75,12 +75,10 @@ export default function BinsPage() {
     }
   }
 
-  const handleBinTypeToggle = (type) => {
+  const handleBinTypeToggle = type => {
     setFormData(prev => ({
       ...prev,
-      bins: prev.bins.includes(type)
-        ? prev.bins.filter(b => b !== type)
-        : [...prev.bins, type]
+      bins: prev.bins.includes(type) ? prev.bins.filter(b => b !== type) : [...prev.bins, type],
     }))
   }
 
@@ -92,7 +90,7 @@ export default function BinsPage() {
       formDataToSend.append("bins", JSON.stringify(formData.bins))
       formDataToSend.append("description", formData.description)
       formDataToSend.append("fakultas", formData.fakultas)
-      
+
       if (imageFile) {
         formDataToSend.append("image", imageFile)
       }
@@ -122,7 +120,7 @@ export default function BinsPage() {
       formDataToSend.append("bins", JSON.stringify(formData.bins))
       formDataToSend.append("description", formData.description)
       formDataToSend.append("fakultas", formData.fakultas)
-      
+
       if (imageFile) {
         formDataToSend.append("image", imageFile)
       } else {
@@ -212,18 +210,18 @@ export default function BinsPage() {
   const endIndex = startIndex + itemsPerPage
   const currentBins = filteredBins.slice(startIndex, endIndex)
 
-  const goToPage = (page) => {
+  const goToPage = page => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)))
   }
 
   const getBinTypeBadgeColor = type => {
     const colors = {
-      "Organik": "bg-green-100 text-green-800",
-      "Anorganik": "bg-blue-100 text-blue-800",
+      Organik: "bg-green-100 text-green-800",
+      Anorganik: "bg-blue-100 text-blue-800",
       "Botol Plastik": "bg-cyan-100 text-cyan-800",
-      "Kertas": "bg-yellow-100 text-yellow-800",
-      "Residu": "bg-gray-100 text-gray-800",
-      "B3": "bg-red-100 text-red-800",
+      Kertas: "bg-yellow-100 text-yellow-800",
+      Residu: "bg-gray-100 text-gray-800",
+      B3: "bg-red-100 text-red-800",
       "Tidak Ada Label": "bg-slate-100 text-slate-800",
     }
     return colors[type] || "bg-slate-100 text-slate-800"
@@ -340,40 +338,37 @@ export default function BinsPage() {
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredBins.length)} of {filteredBins.length} locations
               </p>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
                   Previous
                 </Button>
-                
+
                 {/* Page numbers */}
                 <div className="flex gap-1">
                   {currentPage > 2 && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => goToPage(1)}>1</Button>
+                      <Button variant="outline" size="sm" onClick={() => goToPage(1)}>
+                        1
+                      </Button>
                       {currentPage > 3 && <span className="px-2 py-1">...</span>}
                     </>
                   )}
-                  
+
                   {currentPage > 1 && (
                     <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)}>
                       {currentPage - 1}
                     </Button>
                   )}
-                  
+
                   <Button variant="default" size="sm" className="bg-green-600">
                     {currentPage}
                   </Button>
-                  
+
                   {currentPage < totalPages && (
                     <Button variant="outline" size="sm" onClick={() => goToPage(currentPage + 1)}>
                       {currentPage + 1}
                     </Button>
                   )}
-                  
+
                   {currentPage < totalPages - 1 && (
                     <>
                       {currentPage < totalPages - 2 && <span className="px-2 py-1">...</span>}
@@ -384,12 +379,7 @@ export default function BinsPage() {
                   )}
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
+                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
                   Next
                 </Button>
               </div>
@@ -408,23 +398,13 @@ export default function BinsPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="value">ID Lokasi *</Label>
-              <Input 
-                id="value" 
-                placeholder="FIP_BESAR" 
-                value={formData.value} 
-                onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} 
-              />
+              <Input id="value" placeholder="FIP_BESAR" value={formData.value} onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} />
               <p className="text-xs text-slate-500">Format: FAKULTAS_NAMA (contoh: FIP_BESAR)</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="label">Nama Lokasi *</Label>
-              <Input 
-                id="label" 
-                placeholder="FIP Besar" 
-                value={formData.label} 
-                onChange={e => setFormData({ ...formData, label: e.target.value })} 
-              />
+              <Input id="label" placeholder="FIP Besar" value={formData.label} onChange={e => setFormData({ ...formData, label: e.target.value })} />
             </div>
 
             <div className="space-y-2">
@@ -446,17 +426,10 @@ export default function BinsPage() {
             <div className="space-y-2">
               <Label>Jenis Tempat Sampah * (Pilih minimal 1)</Label>
               <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
-                {availableBinTypes.map((type) => (
+                {availableBinTypes.map(type => (
                   <div key={type} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`add-${type}`}
-                      checked={formData.bins.includes(type)}
-                      onCheckedChange={() => handleBinTypeToggle(type)}
-                    />
-                    <label
-                      htmlFor={`add-${type}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
+                    <Checkbox id={`add-${type}`} checked={formData.bins.includes(type)} onCheckedChange={() => handleBinTypeToggle(type)} />
+                    <label htmlFor={`add-${type}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
                       {type}
                     </label>
                   </div>
@@ -475,23 +448,12 @@ export default function BinsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi *</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Area utama FIP" 
-                value={formData.description} 
-                onChange={e => setFormData({ ...formData, description: e.target.value })} 
-                rows={3}
-              />
+              <Textarea id="description" placeholder="Area utama FIP" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={3} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="image">Gambar Lokasi (Opsional)</Label>
-              <Input 
-                id="image" 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageChange}
-              />
+              <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
               {imagePreview && (
                 <div className="mt-2">
                   <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border" />
@@ -500,14 +462,16 @@ export default function BinsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddDialogOpen(false)
+                resetForm()
+              }}
+            >
               Batal
             </Button>
-            <Button 
-              onClick={handleAdd} 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}
-            >
+            <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700" disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}>
               Tambah Lokasi
             </Button>
           </DialogFooter>
@@ -524,20 +488,12 @@ export default function BinsPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit_value">ID Lokasi *</Label>
-              <Input 
-                id="edit_value" 
-                value={formData.value} 
-                onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} 
-              />
+              <Input id="edit_value" value={formData.value} onChange={e => setFormData({ ...formData, value: e.target.value.toUpperCase() })} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="edit_label">Nama Lokasi *</Label>
-              <Input 
-                id="edit_label" 
-                value={formData.label} 
-                onChange={e => setFormData({ ...formData, label: e.target.value })} 
-              />
+              <Input id="edit_label" value={formData.label} onChange={e => setFormData({ ...formData, label: e.target.value })} />
             </div>
 
             <div className="space-y-2">
@@ -559,17 +515,10 @@ export default function BinsPage() {
             <div className="space-y-2">
               <Label>Jenis Tempat Sampah *</Label>
               <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
-                {availableBinTypes.map((type) => (
+                {availableBinTypes.map(type => (
                   <div key={type} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`edit-${type}`}
-                      checked={formData.bins.includes(type)}
-                      onCheckedChange={() => handleBinTypeToggle(type)}
-                    />
-                    <label
-                      htmlFor={`edit-${type}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
+                    <Checkbox id={`edit-${type}`} checked={formData.bins.includes(type)} onCheckedChange={() => handleBinTypeToggle(type)} />
+                    <label htmlFor={`edit-${type}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
                       {type}
                     </label>
                   </div>
@@ -588,22 +537,12 @@ export default function BinsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="edit_description">Deskripsi *</Label>
-              <Textarea 
-                id="edit_description" 
-                value={formData.description} 
-                onChange={e => setFormData({ ...formData, description: e.target.value })} 
-                rows={3}
-              />
+              <Textarea id="edit_description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={3} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="edit_image">Gambar Lokasi</Label>
-              <Input 
-                id="edit_image" 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageChange}
-              />
+              <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
               {imagePreview && (
                 <div className="mt-2">
                   <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border" />
@@ -612,14 +551,16 @@ export default function BinsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false)
+                resetForm()
+              }}
+            >
               Batal
             </Button>
-            <Button 
-              onClick={handleEdit} 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}
-            >
+            <Button onClick={handleEdit} className="bg-green-600 hover:bg-green-700" disabled={!formData.value || !formData.label || !formData.fakultas || formData.bins.length === 0 || !formData.description}>
               Simpan Perubahan
             </Button>
           </DialogFooter>
@@ -636,14 +577,10 @@ export default function BinsPage() {
             <div className="space-y-4">
               {selectedBin.image_url && (
                 <div className="w-full">
-                  <img 
-                    src={`http://localhost:5000${selectedBin.image_url}`} 
-                    alt={selectedBin.label} 
-                    className="w-full h-64 object-cover rounded-lg border"
-                  />
+                  <img src={`http://localhost:5000${selectedBin.image_url}`} alt={selectedBin.label} className="w-full h-64 object-cover rounded-lg border" />
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>ID Lokasi</Label>
@@ -658,7 +595,9 @@ export default function BinsPage() {
 
               <div className="space-y-2">
                 <Label>Fakultas</Label>
-                <Badge variant="outline" className="text-sm">{selectedBin.fakultas}</Badge>
+                <Badge variant="outline" className="text-sm">
+                  {selectedBin.fakultas}
+                </Badge>
               </div>
 
               <div className="space-y-2">
@@ -685,12 +624,12 @@ export default function BinsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Dibuat</Label>
-                  <p className="text-xs text-slate-500">{new Date(selectedBin.createdAt).toLocaleString('id-ID')}</p>
+                  <p className="text-xs text-slate-500">{new Date(selectedBin.createdAt).toLocaleString("id-ID")}</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Diupdate</Label>
-                  <p className="text-xs text-slate-500">{new Date(selectedBin.updatedAt).toLocaleString('id-ID')}</p>
+                  <p className="text-xs text-slate-500">{new Date(selectedBin.updatedAt).toLocaleString("id-ID")}</p>
                 </div>
               </div>
             </div>
