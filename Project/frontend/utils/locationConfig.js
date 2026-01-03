@@ -275,12 +275,19 @@ export function mapWasteTypeToBin(wasteType) {
     'Anorganik': 'Anorganik',
     'Non Organik Daur Ulang': 'Anorganik',
     'Botol Plastik': 'Botol Plastik',
+    'Botol Plasti...': 'Botol Plastik',  // Handle truncated label
     'Kertas': 'Kertas',
     'Residu': 'Residu',
     'B3': 'B3'
   };
   
-  return binMapping[wasteType] || wasteType;
+  // Handle partial matches for truncated labels
+  const normalizedWaste = wasteType?.trim();
+  if (normalizedWaste?.includes('Botol Plasti')) {
+    return 'Botol Plastik';
+  }
+  
+  return binMapping[normalizedWaste] || normalizedWaste;
 }
 
 /**
@@ -290,10 +297,17 @@ export function mapWasteTypeToBin(wasteType) {
 export function getFallbackBin(wasteType) {
   const fallbackMapping = {
     'Botol Plastik': 'Anorganik',
+    'Botol Plasti...': 'Anorganik',  // Handle truncated label
     'Kertas': 'Anorganik'
   };
   
-  return fallbackMapping[wasteType] || null;
+  // Handle partial matches
+  const normalizedWaste = wasteType?.trim();
+  if (normalizedWaste?.includes('Botol Plasti')) {
+    return 'Anorganik';
+  }
+  
+  return fallbackMapping[normalizedWaste] || null;
 }
 
 /**

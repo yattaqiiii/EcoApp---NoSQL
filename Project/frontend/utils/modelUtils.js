@@ -225,12 +225,23 @@ export function getWasteInfo(label) {
     }
   };
 
+  // Normalize label: trim dan handle partial matches
+  const normalizedLabel = label?.trim();
+  
+  // Debug log
+  console.log('getWasteInfo received label:', label, 'normalized:', normalizedLabel);
+  
   // Fallback untuk 'Non Organik Daur Ulang' ke 'Anorganik'
-  if (label === 'Non Organik Daur Ulang' || label.includes('Non Organik')) {
+  if (normalizedLabel === 'Non Organik Daur Ulang' || normalizedLabel?.includes('Non Organik')) {
     return wasteInfoMap['Anorganik'];
   }
+  
+  // Handle truncated or partial matches untuk Botol Plastik
+  if (normalizedLabel?.includes('Botol Plasti') || normalizedLabel?.toLowerCase().includes('botol plastik')) {
+    return wasteInfoMap['Botol Plastik'];
+  }
 
-  return wasteInfoMap[label] || {
+  return wasteInfoMap[normalizedLabel] || {
     category: 'Unknown',
     icon: '❓',
     color: '#9e9e9e',

@@ -224,9 +224,16 @@ export default function Result() {
       'Organik': '🌿',
       'Non Organik': '♻️',
       'Daur Ulang': '♻️',
-      'Residu': '🗑️'
+      'Residu': '🗑️',
+      'Botol Plastik': '♻️',
+      'Anorganik': '♻️',
+      'Kertas': '📄',
+      'Plastik': '♻️'
     };
-    return icons[category] || '📦';
+    
+    // Jika tidak ditemukan, coba trim whitespace
+    const trimmedCategory = category?.trim();
+    return icons[category] || icons[trimmedCategory] || '📦';
   };
 
   const xpPercentage = (currentXP / xpToNextLevel) * 100;
@@ -295,7 +302,10 @@ export default function Result() {
               <span>{result.category}</span>
             </div>
 
-            <h2 className="text-4xl text-gray-800 mb-8 font-bold">{result.waste_type}</h2>
+            <h2 className="text-3xl md:text-4xl text-gray-800 mb-8 font-bold break-words px-2">
+              {/* Normalize waste_type untuk handle label yang terpotong */}
+              {result.waste_type?.includes('Botol Plasti') ? 'Botol Plastik' : result.waste_type}
+            </h2>
 
             <div className="max-w-2xl mx-auto">
               <div className="flex justify-between mb-2.5 text-base text-gray-600">
@@ -319,7 +329,7 @@ export default function Result() {
                 <h3 className="text-2xl text-gray-800 m-0">Tempat Pembuangan Tersedia di {fakultasLabel}</h3>
               </div>
               <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
-                Buang sampah <strong>{result.waste_type}</strong> ke tempat sampah <strong>{targetBin}</strong> yang tersedia di lokasi berikut:
+                Buang sampah <strong>{result.waste_type?.includes('Botol Plasti') ? 'Botol Plastik' : result.waste_type}</strong> ke tempat sampah <strong>{targetBin}</strong> yang tersedia di lokasi berikut:
               </p>
               
               <div className="mt-5 flex flex-col gap-4">
@@ -399,22 +409,23 @@ export default function Result() {
                   <span className="text-3xl">ℹ️</span>
                   <h3 className="text-2xl text-gray-800 m-0">Alternatif Pembuangan di {fakultasLabel}</h3>
                 </div>
-                <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
+                <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium">
                   Tempat sampah khusus <strong>{targetBin}</strong> tidak tersedia di {fakultasLabel}, 
-                  tetapi Anda dapat membuang sampah <strong>{result.waste_type}</strong> ke tempat sampah <strong>{locationResult.fallbackBin}</strong> sebagai alternatif.
+                  tetapi Anda dapat membuang sampah <strong>{result.waste_type?.includes('Botol Plasti') ? 'Botol Plastik' : result.waste_type}</strong> ke tempat sampah <strong>{locationResult.fallbackBin}</strong> sebagai alternatif.
                 </p>
+              </div>
                 
-                <div className="mt-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-4 mb-6">
                   {locationResult.fallbackLocations.map((lokasi, index) => {
                     const locationKey = `fallback-${index}`;
                     const isImageExpanded = expandedLocationImages[locationKey];
                     
                     return (
-                      <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                      <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 transition-all duration-300 hover:border-[#2196f3] hover:shadow-md">
                         <div className="flex items-start gap-3 mb-3">
-                          <span className="text-2xl mt-0.5">📍</span>
+                          <span className="text-xl mt-0.5">📍</span>
                           <div className="flex-1">
-                            <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                            <h4 className="text-base font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
                             <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
                           </div>
                         </div>
@@ -441,13 +452,13 @@ export default function Result() {
                           <div className="mt-3 pt-3 border-t border-gray-200">
                             <button
                               onClick={() => toggleLocationImage(locationKey)}
-                              className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
+                              className="flex items-center justify-between w-full py-2 px-3 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-200"
                             >
                               <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
                                 <span>📷</span>
                                 Lihat Foto Lokasi
                               </span>
-                              <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                              <span className={`text-xs text-[#2196f3] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
                                 ▼
                               </span>
                             </button>
@@ -468,30 +479,32 @@ export default function Result() {
                       </div>
                     );
                   })}
-                </div>
               </div>
 
               {/* Tampilkan Rekomendasi Lokasi dengan Tempat Sampah Spesifik */}
               {Object.keys(allLocationsWithBin).length > 0 && (
-                <div className="bg-[#f3e5f5] border-l-[5px] border-[#9c27b0] py-6 px-6 rounded-xl mt-5 mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-3xl">⭐</span>
-                    <h3 className="text-2xl text-gray-800 m-0">Rekomendasi Tempat Sampah Khusus {targetBin}</h3>
+                <>
+                  <div className="bg-[#f3e5f5] border-l-[5px] border-[#9c27b0] py-6 px-6 rounded-xl mt-5 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-3xl">⭐</span>
+                      <h3 className="text-2xl text-gray-800 m-0">Rekomendasi Tempat Sampah Khusus {targetBin}</h3>
+                    </div>
+                    <p className="text-gray-600 text-lg leading-relaxed m-0">
+                      Untuk hasil yang lebih optimal, berikut lokasi yang menyediakan tempat sampah khusus <strong>{targetBin}</strong>:
+                    </p>
                   </div>
-                  <p className="text-gray-600 text-lg leading-relaxed m-0">
-                    Untuk hasil yang lebih optimal, berikut lokasi yang menyediakan tempat sampah khusus <strong>{targetBin}</strong>:
-                  </p>
                   
-                  <div className="mt-5 flex flex-col gap-3">
+                  <div className="flex flex-col gap-4 mb-6">
                     {Object.keys(allLocationsWithBin).map((fakultasKey) => {
                       const fakultasInfo = FAKULTAS_OPTIONS.find(f => f.value === fakultasKey);
                       const locations = allLocationsWithBin[fakultasKey];
                       const isExpanded = expandedFakultas[fakultasKey];
                       
                       return (
-                        <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#10b981]">
+                        <div key={fakultasKey} className="border-none">
+                          {/* Header Fakultas */}
                           <div 
-                            className="flex justify-between items-center py-4 px-5 cursor-pointer bg-[#f8f9ff] transition-colors duration-300 hover:bg-[#e8eaf6]"
+                            className="flex justify-between items-center py-3 px-4 cursor-pointer bg-[#f3e5f5] rounded-lg transition-colors duration-300 hover:bg-[#e1bee7] mb-3"
                             onClick={() => toggleFakultas(fakultasKey)}
                           >
                             <div className="flex items-center gap-2.5">
@@ -499,23 +512,24 @@ export default function Result() {
                               <span className="font-semibold text-base text-gray-800">{fakultasInfo?.label || fakultasKey}</span>
                               <span className="text-sm text-gray-600 font-medium">({locations.length} lokasi)</span>
                             </div>
-                            <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                            <span className={`text-sm text-[#9c27b0] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                               ▼
                             </span>
                           </div>
                           
+                          {/* Location Cards - No nested cards */}
                           {isExpanded && (
-                            <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
+                            <div className="flex flex-col gap-3 animate-[slideDown_0.3s_ease] pl-2">
                               {locations.map((lokasi, index) => {
                                 const locationKey = `recom-${fakultasKey}-${index}`;
                                 const isImageExpanded = expandedLocationImages[locationKey];
                                 
                                 return (
-                                  <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                                  <div key={index} className="bg-white/80 border border-gray-200 rounded-lg p-4 transition-all duration-300 hover:border-[#9c27b0] hover:shadow-md">
                                     <div className="flex items-start gap-3 mb-3">
-                                      <span className="text-2xl mt-0.5">📍</span>
+                                      <span className="text-xl mt-0.5">📍</span>
                                       <div className="flex-1">
-                                        <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                                        <h4 className="text-base font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
                                         <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
                                       </div>
                                     </div>
@@ -542,13 +556,13 @@ export default function Result() {
                                       <div className="mt-3 pt-3 border-t border-gray-200">
                                         <button
                                           onClick={() => toggleLocationImage(locationKey)}
-                                          className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
+                                          className="flex items-center justify-between w-full py-2 px-3 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-200"
                                         >
                                           <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
                                             <span>📷</span>
                                             Lihat Foto Lokasi
                                           </span>
-                                          <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                                          <span className={`text-xs text-[#9c27b0] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
                                             ▼
                                           </span>
                                         </button>
@@ -575,33 +589,36 @@ export default function Result() {
                       );
                     })}
                   </div>
-                </div>
+                </>
               )}
             </>
           )}
 
           {/* Kondisi 2: Fakultas user TIDAK PUNYA tempat sampah sama sekali */}
           {hasNoBin && Object.keys(allLocationsWithBin).length > 0 && (
-            <div className="bg-[#fff3e0] border-l-[5px] border-[#ff9800] py-6 px-6 rounded-xl mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">⚠️</span>
-                <h3 className="text-2xl text-gray-800 m-0">Tempat Sampah Tidak Tersedia di {fakultasLabel}</h3>
+            <>
+              <div className="bg-[#fff3e0] border-l-[5px] border-[#ff9800] py-6 px-6 rounded-xl mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-3xl">⚠️</span>
+                  <h3 className="text-2xl text-gray-800 m-0">Tempat Sampah Tidak Tersedia di {fakultasLabel}</h3>
+                </div>
+                <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium">
+                  Tempat sampah <strong>{targetBin}</strong> untuk sampah <strong>{result.waste_type}</strong> tidak tersedia di {fakultasLabel}. 
+                  Berikut rekomendasi lokasi terdekat yang menyediakan tempat sampah ini:
+                </p>
               </div>
-              <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium mb-4">
-                Tempat sampah <strong>{targetBin}</strong> untuk sampah <strong>{result.waste_type}</strong> tidak tersedia di {fakultasLabel}. 
-                Berikut rekomendasi lokasi terdekat yang menyediakan tempat sampah ini:
-              </p>
               
-              <div className="mt-5 flex flex-col gap-3">
+              <div className="flex flex-col gap-4 mb-6">
                 {Object.keys(allLocationsWithBin).map((fakultasKey) => {
                   const fakultasInfo = FAKULTAS_OPTIONS.find(f => f.value === fakultasKey);
                   const locations = allLocationsWithBin[fakultasKey];
                   const isExpanded = expandedFakultas[fakultasKey];
                   
                   return (
-                    <div key={fakultasKey} className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#10b981]">
+                    <div key={fakultasKey} className="border-none">
+                      {/* Header Fakultas */}
                       <div 
-                        className="flex justify-between items-center py-4 px-5 cursor-pointer bg-[#f8f9ff] transition-colors duration-300 hover:bg-[#e8eaf6]"
+                        className="flex justify-between items-center py-3 px-4 cursor-pointer bg-[#fff3e0] rounded-lg transition-colors duration-300 hover:bg-[#ffe0b2] mb-3"
                         onClick={() => toggleFakultas(fakultasKey)}
                       >
                         <div className="flex items-center gap-2.5">
@@ -609,23 +626,24 @@ export default function Result() {
                           <span className="font-semibold text-base text-gray-800">{fakultasInfo?.label || fakultasKey}</span>
                           <span className="text-sm text-gray-600 font-medium">({locations.length} lokasi)</span>
                         </div>
-                        <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                        <span className={`text-sm text-[#ff9800] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                           ▼
                         </span>
                       </div>
                       
+                      {/* Location Cards - No nested cards */}
                       {isExpanded && (
-                        <div className="py-4 px-4 bg-white flex flex-col gap-3 animate-[slideDown_0.3s_ease]">
+                        <div className="flex flex-col gap-3 animate-[slideDown_0.3s_ease] pl-2">
                           {locations.map((lokasi, index) => {
                             const locationKey = `nobin-${fakultasKey}-${index}`;
                             const isImageExpanded = expandedLocationImages[locationKey];
                             
                             return (
-                              <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-5 transition-all duration-300 hover:border-[#10b981] hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]">
+                              <div key={index} className="bg-white/80 border border-gray-200 rounded-lg p-4 transition-all duration-300 hover:border-[#ff9800] hover:shadow-md">
                                 <div className="flex items-start gap-3 mb-3">
-                                  <span className="text-2xl mt-0.5">📍</span>
+                                  <span className="text-xl mt-0.5">📍</span>
                                   <div className="flex-1">
-                                    <h4 className="text-lg font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
+                                    <h4 className="text-base font-semibold text-gray-800 my-0 mb-1">{lokasi.label}</h4>
                                     <p className="text-sm text-gray-600 m-0">{lokasi.description}</p>
                                   </div>
                                 </div>
@@ -652,13 +670,13 @@ export default function Result() {
                                   <div className="mt-3 pt-3 border-t border-gray-200">
                                     <button
                                       onClick={() => toggleLocationImage(locationKey)}
-                                      className="flex items-center justify-between w-full py-2 px-3 bg-[#f8f9ff] rounded-lg hover:bg-[#e8eaf6] transition-colors duration-200"
+                                      className="flex items-center justify-between w-full py-2 px-3 bg-white rounded-lg hover:bg-gray-50 transition-colors duration-200"
                                     >
                                       <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
                                         <span>📷</span>
                                         Lihat Foto Lokasi
                                       </span>
-                                      <span className={`text-xs text-[#10b981] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
+                                      <span className={`text-xs text-[#ff9800] transition-transform duration-300 ${isImageExpanded ? 'rotate-180' : ''}`}>
                                         ▼
                                       </span>
                                     </button>
@@ -685,7 +703,7 @@ export default function Result() {
                   );
                 })}
               </div>
-            </div>
+            </>
           )}
 
           {/* Jika tidak ada tempat sampah sama sekali */}
@@ -696,7 +714,7 @@ export default function Result() {
                 <h3 className="text-2xl text-gray-800 m-0">Tempat Sampah Tidak Ditemukan</h3>
               </div>
               <p className="text-gray-600 text-lg leading-relaxed m-0 font-medium">
-                Maaf, tempat sampah untuk <strong>{result.waste_type}</strong> belum tersedia di sistem kami.
+                Maaf, tempat sampah untuk <strong>{result.waste_type?.includes('Botol Plasti') ? 'Botol Plastik' : result.waste_type}</strong> belum tersedia di sistem kami.
                 Silakan hubungi pengelola kampus untuk informasi lebih lanjut.
               </p>
             </div>
