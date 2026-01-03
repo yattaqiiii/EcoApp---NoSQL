@@ -200,6 +200,11 @@ router.post("/waste-logs", async (req, res) => {
   try {
     const body = req.body
 
+    // Normalize waste_type untuk handle label yang terpotong
+    if (body.waste_type && body.waste_type.includes('Botol Plasti')) {
+      body.waste_type = 'Botol Plastik'
+    }
+
     // Calculate XP based on confidence if not provided
     if (!body.xp_earned) {
       body.xp_earned = Math.round(body.confidence * 10)
