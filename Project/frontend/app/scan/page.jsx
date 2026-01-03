@@ -133,7 +133,7 @@ export default function Scan() {
           body: JSON.stringify({
             user_id: currentUser.id, // [PENTING] Kirim ID User
             waste_type: prediction.label,
-            confidence: Math.round(prediction.confidence),
+            confidence: prediction.confidence / 100, // Convert percentage to decimal (90% → 0.9)
             fakultas: selectedFakultas,
             lokasi_id: selectedFakultas
           }),
