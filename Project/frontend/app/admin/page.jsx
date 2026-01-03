@@ -2,20 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Database, Users, Trash2, TrendingUp, Activity, Award, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Database, Users, Trash2, TrendingUp, Activity, Award, Loader2, BarChart3, Target, Calendar, MapPin, PackageCheck } from "lucide-react"
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [timeFilter, setTimeFilter] = useState("all")
 
   useEffect(() => {
     fetchDashboardStats()
-  }, [])
+  }, [timeFilter])
 
   const fetchDashboardStats = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("http://localhost:5000/api/admin/stats")
+      const response = await fetch(`http://localhost:5000/api/admin/stats?timeFilter=${timeFilter}`)
       const result = await response.json()
 
       if (result.success) {
@@ -55,18 +59,32 @@ export default function AdminDashboard() {
       bgColor: "bg-green-100",
     },
     {
+      title: "Total Bins",
+      value: stats?.stats?.totalBins || 0,
+      icon: Trash2,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+    {
       title: "Avg Level",
       value: stats?.stats?.avgLevel?.toFixed(1) || "0",
       icon: TrendingUp,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
     },
     {
       title: "Total XP",
       value: (stats?.stats?.totalXP || 0).toLocaleString(),
       icon: Award,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+    },
+    {
+      title: "Avg Confidence",
+      value: stats?.stats?.avgConfidence ? `${(stats.stats.avgConfidence > 1 ? stats.stats.avgConfidence : stats.stats.avgConfidence * 100).toFixed(1)}%` : "0%",
+      icon: Target,
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-100",
     },
   ]
 
@@ -90,16 +108,97 @@ export default function AdminDashboard() {
     percentage: totalWaste > 0 ? Math.round((item.count / totalWaste) * 100) : 0,
   }))
 
+  // Prepare data for charts
+  const pieColors = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"]
+
+  const pieChartData = wasteTypeDistribution.map((item, index) => ({
+    name: item._id,
+    value: item.count,
+    fill: pieColors[index % pieColors.length],
+  }))
+
+  const fakultasChartData = (stats?.fakultasDistribution || []).map(item => ({
+    name: item._id,
+    scans: item.count,
+  }))
+
+  const dailyScansData = (stats?.dailyScans || []).map(item => ({
+    date: new Date(item._id).toLocaleDateString("id-ID", { month: "short", day: "numeric" }),
+    scans: item.count,
+  }))
+
+  const topUsersData = (stats?.topUsers || []).map(user => ({
+    name: user.username,
+    xp: user.total_xp,
+    level: user.level,
+  }))
+
+  const hourlyData = Array.from({ length: 24 }, (_, i) => {
+    const hourData = (stats?.scansByHour || []).find(h => h._id === i)
+    return {
+      hour: `${i}:00`,
+      scans: hourData ? hourData.count : 0,
+    }
+  })
+
+  // Bin distribution data
+  const binsByFakultasData = (stats?.binsByFakultas || []).map(item => ({
+    name: item._id,
+    locations: item.count,
+  }))
+
+  const binTypesData = (stats?.binTypesDistribution || []).map((item, index) => ({
+    name: item._id,
+    value: item.count,
+    fill: pieColors[index % pieColors.length],
+  }))
+
+  // Prepare bin types per fakultas for stacked bar chart
+  const allBinTypes = [...new Set((stats?.binTypesPerFakultas || []).flatMap(f => f.binTypes.map(b => b.type)))]
+  const binTypesPerFakultasData = (stats?.binTypesPerFakultas || []).map(fakultas => {
+    const data = { fakultas: fakultas._id }
+    fakultas.binTypes.forEach(bt => {
+      data[bt.type] = bt.count
+    })
+    return data
+  })
+
+  const binTypeColors = {
+    Organik: "#10b981",
+    Anorganik: "#3b82f6",
+    "Botol Plastik": "#06b6d4",
+    Kertas: "#fbbf24",
+    Residu: "#6b7280",
+    B3: "#ef4444",
+    Kaca: "#8b5cf6",
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-600 mt-1">Welcome to EcoScan Admin Panel</p>
+      {/* Header with Filter */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-600 mt-1">Welcome to EcoScan Admin Panel</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Calendar className="h-5 w-5 text-slate-600" />
+          <Select value={timeFilter} onValueChange={setTimeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">Last 7 Days</SelectItem>
+              <SelectItem value="month">Last 30 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         {statsCards.map((stat, index) => {
           const Icon = stat.icon
           return (
@@ -109,10 +208,6 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm font-medium text-slate-600">{stat.title}</p>
                     <h3 className="text-2xl font-bold text-slate-900 mt-2">{stat.value}</h3>
-                    <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      {stat.change}
-                    </p>
                   </div>
                   <div className={`${stat.bgColor} p-3 rounded-full`}>
                     <Icon className={`h-6 w-6 ${stat.color}`} />
@@ -124,60 +219,268 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
+      {/* ========== SCAN ACTIVITY ANALYTICS ========== */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 border-b-2 border-blue-200 pb-3 mt-8">
+          <Activity className="h-6 w-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-slate-900">Scan Activity Analytics</h2>
+        </div>
+
+        {/* Charts Row 1 */}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activities */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                Recent Activities
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                {(stats?.recentActivities || []).slice(0, 5).map(activity => (
+                  <div key={activity._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900">{activity.username}</p>
+                      <p className="text-sm text-slate-600">Scanned {activity.waste_type} waste</p>
+                      <p className="text-xs text-slate-500 mt-1">Confidence: {activity.confidence > 1 ? activity.confidence.toFixed(1) : (activity.confidence * 100).toFixed(1)}%</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">+{activity.xp_earned || 0} XP</span>
+                      <p className="text-xs text-slate-500 mt-1">{formatTimeAgo(activity.timestamp)}</p>
+                    </div>
+                  </div>
+                ))}
+                {(!stats?.recentActivities || stats.recentActivities.length === 0) && <p className="text-center text-slate-500 py-4">No recent activities</p>}
+              </div>
+            </CardContent>
+          </Card>
+          {/* Waste Type Pie Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-purple-600" />
+                Waste Type Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pieChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-slate-500 py-12">No data available</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Daily Scans Line Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                Daily Scan Trend (Last 7 Days)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {dailyScansData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dailyScansData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="scans" stroke="#3b82f6" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-slate-500 py-12">No data available</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Fakultas Distribution Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+                Scans by Fakultas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {fakultasChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={fakultasChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="scans" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-slate-500 py-12">No data available</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Hourly Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-cyan-600" />
+                Scan Activity by Hour (24h)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="scans" fill="#06b6d4" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* ========== BIN DISTRIBUTION ANALYTICS ========== */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 border-b-2 border-green-200 pb-3 mt-8">
+          <MapPin className="h-6 w-6 text-green-600" />
+          <h2 className="text-2xl font-bold text-slate-900">Bin Distribution Analytics</h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bins by Fakultas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-green-600" />
+                Bin Locations by Fakultas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {binsByFakultasData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={binsByFakultasData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="locations" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-slate-500 py-12">No bin data available</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bin Types Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PackageCheck className="h-5 w-5 text-purple-600" />
+                Bin Types Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {binTypesData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={binTypesData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">
+                      {binTypesData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-slate-500 py-12">No bin types available</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bin Types per Fakultas - Stacked Bar Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-600" />
-              Recent Activities
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Bin Types Distribution per Fakultas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {(stats?.recentActivities || []).slice(0, 5).map(activity => (
-                <div key={activity._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900">{activity.username}</p>
-                    <p className="text-sm text-slate-600">Scanned {activity.waste_type} waste</p>
-                    <p className="text-xs text-slate-500 mt-1">Confidence: {activity.confidence > 1 ? activity.confidence.toFixed(1) : (activity.confidence * 100).toFixed(1)}%</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">+{activity.xp_earned || 0} XP</span>
-                    <p className="text-xs text-slate-500 mt-1">{formatTimeAgo(activity.timestamp)}</p>
-                  </div>
-                </div>
-              ))}
-              {(!stats?.recentActivities || stats.recentActivities.length === 0) && <p className="text-center text-slate-500 py-4">No recent activities</p>}
-            </div>
+            {binTypesPerFakultasData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={binTypesPerFakultasData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fakultas" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {allBinTypes.map((binType, index) => (
+                    <Bar key={binType} dataKey={binType} stackId="a" fill={binTypeColors[binType] || pieColors[index % pieColors.length]} />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-slate-500 py-12">No bin distribution data available</p>
+            )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Waste Type Distribution */}
+      {/* ========== USER ANALYTICS ========== */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 border-b-2 border-orange-200 pb-3 mt-8">
+          <Award className="h-6 w-6 text-orange-600" />
+          <h2 className="text-2xl font-bold text-slate-900">User Analytics</h2>
+        </div>
+
+        {/* Top Users Bar Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-purple-600" />
-              Waste Type Distribution
+              <Award className="h-5 w-5 text-orange-600" />
+              Top 5 Users by XP
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {wasteTypes.map((waste, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-900">{waste.type}</span>
-                    <span className="text-sm text-slate-600">
-                      {waste.count} ({waste.percentage}%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all" style={{ width: `${waste.percentage}%` }} />
-                  </div>
-                </div>
-              ))}
-              {wasteTypes.length === 0 && <p className="text-center text-slate-500 py-4">No data available</p>}
-            </div>
+            {topUsersData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topUsersData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="xp" fill="#f59e0b" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-slate-500 py-12">No users yet</p>
+            )}
           </CardContent>
         </Card>
       </div>
