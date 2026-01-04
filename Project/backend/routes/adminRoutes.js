@@ -200,6 +200,9 @@ router.post("/waste-logs", async (req, res) => {
   try {
     const body = req.body
 
+    const confidence = body.confidence != null ? Number(body.confidence) : undefined
+    body.confidence = confidence;
+
     // Normalize waste_type untuk handle label yang terpotong
     if (body.waste_type && body.waste_type.includes('Botol Plasti')) {
       body.waste_type = 'Botol Plastik'
@@ -207,7 +210,13 @@ router.post("/waste-logs", async (req, res) => {
 
     // Calculate XP based on confidence if not provided
     if (!body.xp_earned) {
-      body.xp_earned = Math.round(body.confidence * 10)
+      if(confidence != null && !Number.isNaN(confidence)){
+        body.xp_earned = Math.round(body.confidence * 10)
+      }else{
+        body.xp_earned = 0
+      }
+    }else{
+      body.xp_earned = Number(body.xp_earned)
     }
 
     const wasteLog = await WasteLog.create(body)

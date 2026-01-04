@@ -9,6 +9,14 @@ const wasteLogSchema = new mongoose.Schema({
     required: true, // Wajib ada pemiliknya
   },
 
+  xp_earned: {
+    type: Number,
+    required: true,
+    min: 10,
+    max: 25,
+    default: 10
+  },
+
   waste_type: {
     type: String,
     required: true,
