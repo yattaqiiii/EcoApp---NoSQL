@@ -92,18 +92,6 @@ function Navbar() {
           </li>
           <li className="m-0">
             <Link 
-              href="/about" 
-              className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
-                isActive('/about') 
-                  ? 'bg-[#10b981] text-white font-semibold shadow-md' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Tentang
-            </Link>
-          </li>
-          <li className="m-0">
-            <Link 
               href="/profile" 
               className={`no-underline py-2.5 px-6 rounded-full text-lg font-medium transition-all duration-300 block ${
                 isActive('/profile') 
@@ -157,19 +145,6 @@ function Navbar() {
                 }`}
               >
                 Scan
-              </Link>
-            </li>
-            <li className="m-0">
-              <Link 
-                href="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`no-underline py-3 px-4 rounded-lg text-base font-medium transition-all duration-300 block ${
-                  isActive('/about') 
-                    ? 'bg-[#10b981] text-white font-semibold' 
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                Tentang
               </Link>
             </li>
             <li className="m-0">

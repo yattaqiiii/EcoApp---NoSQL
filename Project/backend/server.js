@@ -10,6 +10,9 @@ import User from "./models/User.js"
 import statsRoutes from "./routes/statsRoutes.js"
 import adminRoutes from "./routes/adminRoutes.js"
 
+// Import gamification system
+import { calculateXPFromConfidence, calculateLevel, checkNewBadges } from "./utils/gamification.js"
+
 dotenv.config()
 const app = express()
 
@@ -92,6 +95,92 @@ app.post("/api/auth/login", async (req, res) => {
     res.status(500).json({ message: "Terjadi kesalahan server" })
   }
 })
+
+// 3. GET USER BY ID - untuk refresh user data
+app.get("/api/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan" })
+    }
+
+    // Return user data
+    res.json({
+      message: "User data fetched successfully",
+      user: {
+        id: user._id,
+        name: user.username,
+        email: user.email,
+        total_xp: user.total_xp,
+        level: user.level,
+        badges: user.badges,
+        joinDate: user.joined_at,
+      },
+    })
+  } catch (error) {
+    console.error("Get User Error:", error)
+    res.status(500).json({ message: "Terjadi kesalahan server" })
+  }
+})
+
+// 4. UPDATE USER PROFILE - untuk edit name dan email
+app.put("/api/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params
+    const { name, email } = req.body
+
+    // Validasi input
+    if (!name || !email) {
+      return res.status(400).json({ message: "Nama dan email harus diisi" })
+    }
+
+    // Validasi email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Format email tidak valid" })
+    }
+
+    // Cek apakah email sudah digunakan user lain
+    const existingUser = await User.findOne({ email, _id: { $ne: userId } })
+    if (existingUser) {
+      return res.status(400).json({ message: "Email sudah digunakan oleh user lain" })
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        username: name,
+        email: email,
+      },
+      { new: true } // Return updated document
+    )
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User tidak ditemukan" })
+    }
+
+    res.json({
+      message: "Profile berhasil diperbarui",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.username,
+        email: updatedUser.email,
+        total_xp: updatedUser.total_xp,
+        level: updatedUser.level,
+        badges: updatedUser.badges,
+        joinDate: updatedUser.joined_at,
+      },
+    })
+  } catch (error) {
+    console.error("Update User Error:", error)
+    res.status(500).json({ message: "Terjadi kesalahan server" })
+  }
+})
+
 app.post("/api/scan", async (req, res) => {
   try {
     // Ambil user_id dari body request
@@ -101,10 +190,15 @@ app.post("/api/scan", async (req, res) => {
       return res.status(400).json({ message: "Data tidak lengkap (User ID wajib ada)" })
     }
 
+    // ========== CALCULATE XP ==========
+    const xpEarned = calculateXPFromConfidence(confidence)
+
+    // ========== SAVE WASTE LOG WITH XP ==========
     const newLog = new WasteLog({
-      user_id, // Simpan ID pemilik
+      user_id,
       waste_type,
       confidence,
+      xp_earned: xpEarned, // Save XP to waste log
       fakultas,
       lokasi_id: lokasi_id || fakultas,
       timestamp: new Date(),
@@ -112,13 +206,71 @@ app.post("/api/scan", async (req, res) => {
 
     const savedLog = await newLog.save()
 
-    // [OPSIONAL] Update XP User di sini jika mau
-    // await User.findByIdAndUpdate(user_id, { $inc: { total_xp: 10 } });
+    // ========== UPDATE USER XP & LEVEL ==========
+    const user = await User.findById(user_id)
 
-    res.status(201).json({ message: "Scan berhasil!", data: savedLog })
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan" })
+    }
+
+    // Update total XP
+    const newTotalXP = user.total_xp + xpEarned
+    const newLevel = calculateLevel(newTotalXP)
+    const leveledUp = newLevel > user.level
+
+    // ========== CHECK FOR NEW BADGES ==========
+    // Get user statistics for badge checking
+    const userScans = await WasteLog.countDocuments({ user_id })
+    const uniqueWasteTypes = await WasteLog.distinct("waste_type", { user_id })
+    const highestConfidenceLog = await WasteLog.findOne({ user_id }).sort({ confidence: -1 })
+
+    // Calculate streak (simplified - count scans in last 30 days)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const recentScans = await WasteLog.find({
+      user_id,
+      timestamp: { $gte: thirtyDaysAgo },
+    }).sort({ timestamp: 1 })
+
+    // Simple streak calculation (days with at least one scan)
+    const scanDates = recentScans.map(log => log.timestamp.toDateString())
+    const uniqueDays = [...new Set(scanDates)]
+    const streak = uniqueDays.length
+
+    const userStats = {
+      totalScans: userScans,
+      level: newLevel,
+      totalXP: newTotalXP,
+      highestConfidence: highestConfidenceLog?.confidence || 0,
+      wasteTypesScanned: uniqueWasteTypes.length,
+      streak: streak,
+    }
+
+    const newBadges = checkNewBadges(userStats, user.badges)
+
+    // Update user with new XP, level, and badges
+    await User.findByIdAndUpdate(user_id, {
+      total_xp: newTotalXP,
+      level: newLevel,
+      $addToSet: { badges: { $each: newBadges } }, // Add new badges without duplicates
+    })
+
+    // ========== RETURN RESPONSE WITH GAMIFICATION DATA ==========
+    res.status(201).json({
+      message: "Scan berhasil!",
+      data: savedLog,
+      gamification: {
+        xpEarned,
+        newTotalXP,
+        newLevel,
+        leveledUp,
+        newBadges,
+        userStats,
+      },
+    })
   } catch (error) {
     console.error("Error saving scan:", error)
-    res.status(500).json({ message: "Gagal menyimpan data" })
+    res.status(500).json({ message: "Gagal menyimpan data", error: error.message })
   }
 })
 
