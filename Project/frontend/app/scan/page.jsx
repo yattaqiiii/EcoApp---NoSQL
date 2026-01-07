@@ -8,6 +8,7 @@ import { useRequireAuth } from "@/utils/authHooks"
 import Navbar from "@/components/Navbar"
 import { loadModel, predictImage, getWasteInfo, isModelLoaded } from "@/utils/modelUtils"
 import { getUser } from "@/utils/authUtils"
+import { apiFetch } from "@/lib/api"
 
 // Helper function to compress image for sessionStorage
 const compressImageForStorage = async (imageElement, maxWidth = 800, quality = 0.7) => {
@@ -160,7 +161,7 @@ export default function Scan() {
       // --- TAMBAHAN BARU: KIRIM KE BACKEND ---
       try {
         // UPDATE FETCH BODY
-        const response = await fetch("http://127.0.0.1:5000/api/scan", {
+        const response = await apiFetch("/api/scan", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

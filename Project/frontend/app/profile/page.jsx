@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRequireAuth } from "@/utils/authHooks"
 import { logout, getUser } from "@/utils/authUtils"
 import Navbar from "@/components/Navbar"
+import { apiFetch } from "@/lib/api"
 
 // Badge definitions (matching backend)
 const BADGE_INFO = {
@@ -183,7 +184,7 @@ export default function Profile() {
     // Fetch fresh user data from backend
     const fetchUserData = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/user/${userData.id}`)
+        const res = await apiFetch(`/api/user/${userData.id}`)
         const data = await res.json()
 
         if (res.ok && data.user) {
@@ -217,7 +218,7 @@ export default function Profile() {
     // [BARU] Ambil Data History dari Backend
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/waste-logs?userId=${userData.id}`)
+        const res = await apiFetch(`/api/waste-logs?userId=${userData.id}`)
         const data = await res.json()
         if (res.ok) {
           setLogs(data.data)
@@ -296,7 +297,7 @@ export default function Profile() {
     setEditError("")
 
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/user/${user.id}`, {
+      const res = await apiFetch(`/api/user/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

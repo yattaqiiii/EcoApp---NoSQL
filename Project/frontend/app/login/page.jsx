@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { setUser } from '@/utils/authUtils';
+import { apiFetch } from '@/lib/api';
 
 export default function Login() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function Login() {
 
     try {
       // Panggil API Backend Login
-      const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+      const response = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -51,19 +52,20 @@ export default function Login() {
       // Simpan user data ASLI dari Database ke localStorage
       // Fungsi setUser ada di utils/authUtils.js
       setUser({
-        id: data.user._id || data.user.id, // Tambahkan ID dari database
+        id: data.user.id || data.user._id, // Handle both id and _id
         email: data.user.email,
         name: data.user.name,
         level: data.user.level, // Load Level dari DB
         xp: data.user.total_xp, // Load XP dari DB
-        joinDate: data.user.joinDate
+        joinDate: data.user.joinDate || data.user.joined_at // Handle both field names
       });
 
       // Redirect ke home
       router.push('/home');
 
     } catch (err) {
-      setError(err.message);
+      console.error('Login error:', err);
+      setError(err.message || 'Koneksi gagal. Periksa internet atau backend Anda.');
     } finally {
       setIsLoading(false);
     }

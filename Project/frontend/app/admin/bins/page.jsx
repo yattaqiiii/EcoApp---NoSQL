@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { apiFetch, getActiveApiUrl } from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Pencil, Trash2, Search, Eye, MapPin, Loader2, Image as ImageIcon } from "lucide-react"
-import { getApiUrl, API_ENDPOINTS, API_BASE_URL } from "@/lib/api"
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api"
 import { WASTE_TYPES, FAKULTAS_LIST } from "@/lib/constants"
 import { usePagination } from "@/hooks/usePagination"
 
@@ -170,7 +171,7 @@ export default function BinsPage() {
       fakultas: bin.fakultas,
       image_url: bin.image_url,
     })
-    setImagePreview(bin.image_url ? `http://localhost:5000${bin.image_url}` : "")
+    setImagePreview(bin.image_url ? `${getActiveApiUrl()}${bin.image_url}` : "")
     setIsEditDialogOpen(true)
   }
 
@@ -270,7 +271,7 @@ export default function BinsPage() {
                     <TableRow key={bin._id}>
                       <TableCell>
                         {bin.image_url ? (
-                          <img src={`${API_BASE_URL}${bin.image_url}`} alt={bin.label} className="w-16 h-16 object-cover rounded-lg border" />
+                          <img src={`${getActiveApiUrl()}${bin.image_url}`} alt={bin.label} className="w-16 h-16 object-cover rounded-lg border" />
                         ) : (
                           <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
                             <ImageIcon className="h-6 w-6 text-slate-400" />
@@ -558,7 +559,7 @@ export default function BinsPage() {
             <div className="space-y-4">
               {selectedBin.image_url && (
                 <div className="w-full">
-                  <img src={`${API_BASE_URL}${selectedBin.image_url}`} alt={selectedBin.label} className="w-full h-64 object-cover rounded-lg border" />
+                  <img src={`${getActiveApiUrl()}${selectedBin.image_url}`} alt={selectedBin.label} className="w-full h-64 object-cover rounded-lg border" />
                 </div>
               )}
 

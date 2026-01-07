@@ -6,6 +6,7 @@ import { useLocation } from "@/context/LocationContext"
 import { FAKULTAS_OPTIONS, mapWasteTypeToBin, findLocationsWithBin, findLocationsWithFallback, getFallbackBin, binMatches } from "@/utils/locationConfig"
 import Navbar from "@/components/Navbar"
 import { getUser } from "@/utils/authUtils"
+import { apiFetch, getActiveApiUrl } from "@/lib/api"
 
 // Badge definitions (matching backend)
 const BADGE_INFO = {
@@ -49,7 +50,7 @@ export default function Result() {
   useEffect(() => {
     const fetchBins = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/admin/bins")
+        const response = await apiFetch("/api/admin/bins")
         if (response.ok) {
           const result = await response.json()
           // API returns { success: true, data: [...], count: ... }
@@ -430,7 +431,7 @@ export default function Result() {
                           {isImageExpanded && (
                             <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
                               <img
-                                src={`http://localhost:5000${lokasi.image_url}`}
+                                src={`${API_BASE_URL}${lokasi.image_url}`}
                                 alt={`Foto lokasi ${lokasi.label}`}
                                 className="w-full h-auto object-cover rounded-lg shadow-md"
                                 onError={e => {
@@ -506,7 +507,7 @@ export default function Result() {
                           {isImageExpanded && (
                             <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
                               <img
-                                src={`http://localhost:5000${lokasi.image_url}`}
+                                src={`${getActiveApiUrl()}${lokasi.image_url}`}
                                 alt={`Foto lokasi ${lokasi.label}`}
                                 className="w-full h-auto object-cover rounded-lg shadow-md"
                                 onError={e => {
@@ -598,7 +599,7 @@ export default function Result() {
                                         {isImageExpanded && (
                                           <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
                                             <img
-                                              src={`http://localhost:5000${lokasi.image_url}`}
+                                              src={`${getActiveApiUrl()}${lokasi.image_url}`}
                                               alt={`Foto lokasi ${lokasi.label}`}
                                               className="w-full h-auto object-cover rounded-lg shadow-md"
                                               onError={e => {
@@ -699,7 +700,7 @@ export default function Result() {
                                     {isImageExpanded && (
                                       <div className="mt-3 rounded-lg overflow-hidden animate-[slideDown_0.3s_ease]">
                                         <img
-                                          src={`http://localhost:5000${lokasi.image_url}`}
+                                          src={`${getActiveApiUrl()}${lokasi.image_url}`}
                                           alt={`Foto lokasi ${lokasi.label}`}
                                           className="w-full h-auto object-cover rounded-lg shadow-md"
                                           onError={e => {
