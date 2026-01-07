@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Database, Users, Trash2, TrendingUp, Activity, Award, Loader2, BarChart3, Target, Calendar, MapPin, PackageCheck } from "lucide-react"
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api"
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
@@ -19,7 +20,7 @@ export default function AdminDashboard() {
   const fetchDashboardStats = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`http://localhost:5000/api/admin/stats?timeFilter=${timeFilter}`)
+      const response = await fetch(getApiUrl(API_ENDPOINTS.STATS, { timeFilter }))
       const result = await response.json()
 
       if (result.success) {

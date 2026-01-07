@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Pencil, Trash2, Search, Eye, Award, TrendingUp, Loader2 } from "lucide-react"
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api"
+import { usePagination } from "@/hooks/usePagination"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -18,8 +20,6 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -36,7 +36,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("http://localhost:5000/api/admin/users")
+      const response = await fetch(getApiUrl(API_ENDPOINTS.USERS))
       const result = await response.json()
 
       if (result.success) {
@@ -51,24 +51,12 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(user => user.username?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
 
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentUsers = filteredUsers.slice(startIndex, endIndex)
-
-  const goToPage = page => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
-  }
-
-  // Reset to page 1 when search changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
+  // Use pagination hook
+  const { currentPage, totalPages, currentItems: currentUsers, goToPage, startIndex, endIndex } = usePagination(filteredUsers)
 
   const handleAdd = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/users", {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.USERS), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,7 +82,7 @@ export default function UsersPage() {
 
   const handleEdit = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${selectedUser._id}`, {
+      const response = await fetch(getApiUrl(`${API_ENDPOINTS.USERS}/${selectedUser._id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,7 +110,7 @@ export default function UsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+      const response = await fetch(getApiUrl(`${API_ENDPOINTS.USERS}/${id}`), {
         method: "DELETE",
       })
 
@@ -179,50 +167,50 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-3 md:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Users</h1>
-          <p className="text-slate-600 mt-1">Manage user accounts and gamification</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Users</h1>
+          <p className="text-sm md:text-base text-slate-600 mt-1">Manage user accounts and gamification</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Add User
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Total Users</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{users.length}</p>
+              <p className="text-xs md:text-sm text-slate-600">Total Users</p>
+              <p className="text-xl md:text-3xl font-bold text-slate-900 mt-1">{users.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Avg Level</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">{users.length > 0 ? (users.reduce((sum, u) => sum + (u.level || 0), 0) / users.length).toFixed(1) : "0"}</p>
+              <p className="text-xs md:text-sm text-slate-600">Avg Level</p>
+              <p className="text-xl md:text-3xl font-bold text-blue-600 mt-1">{users.length > 0 ? (users.reduce((sum, u) => sum + (u.level || 0), 0) / users.length).toFixed(1) : "0"}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Total XP</p>
-              <p className="text-3xl font-bold text-orange-600 mt-1">{users.reduce((sum, u) => sum + (u.total_xp || 0), 0).toLocaleString()}</p>
+              <p className="text-xs md:text-sm text-slate-600">Total XP</p>
+              <p className="text-xl md:text-3xl font-bold text-orange-600 mt-1">{users.reduce((sum, u) => sum + (u.total_xp || 0), 0).toLocaleString()}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Badges Earned</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">{users.reduce((sum, u) => sum + u.badges.length, 0)}</p>
+              <p className="text-xs md:text-sm text-slate-600">Badges Earned</p>
+              <p className="text-xl md:text-3xl font-bold text-purple-600 mt-1">{users.reduce((sum, u) => sum + u.badges.length, 0)}</p>
             </div>
           </CardContent>
         </Card>
@@ -230,7 +218,7 @@ export default function UsersPage() {
 
       {/* Search */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 md:pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input placeholder="Search by username or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
@@ -240,88 +228,90 @@ export default function UsersPage() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+        <CardHeader className="px-4 md:px-6">
+          <CardTitle className="text-lg md:text-xl">All Users ({filteredUsers.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Total XP</TableHead>
-                <TableHead>Badges</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+        <CardContent className="px-0 md:px-6">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-600" />
-                    <p className="text-slate-500 mt-2">Loading users...</p>
-                  </TableCell>
+                  <TableHead className="min-w-[120px]">Username</TableHead>
+                  <TableHead className="min-w-[180px]">Email</TableHead>
+                  <TableHead className="min-w-[80px]">Level</TableHead>
+                  <TableHead className="min-w-[100px]">Total XP</TableHead>
+                  <TableHead className="min-w-[80px]">Badges</TableHead>
+                  <TableHead className="min-w-[100px]">Joined</TableHead>
+                  <TableHead className="text-right min-w-[120px]">Actions</TableHead>
                 </TableRow>
-              ) : filteredUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-slate-500">
-                    No users found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentUsers.map(user => (
-                  <TableRow key={user._id}>
-                    <TableCell className="font-medium">{user.username}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge className={getLevelBadgeColor(user.level)}>Level {user.level}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1 text-sm font-medium text-orange-600">
-                        <TrendingUp className="h-3 w-3" />
-                        {user.total_xp.toLocaleString()} XP
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-600">
-                        <Award className="h-3 w-3" />
-                        {user.badges.length}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">{formatDate(user.joined_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openViewDialog(user)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(user)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(user._id)}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-600" />
+                      <p className="text-slate-500 mt-2">Loading users...</p>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-slate-500">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  currentUsers.map(user => (
+                    <TableRow key={user._id}>
+                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge className={getLevelBadgeColor(user.level)}>Level {user.level}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center gap-1 text-sm font-medium text-orange-600">
+                          <TrendingUp className="h-3 w-3" />
+                          {user.total_xp.toLocaleString()} XP
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center gap-1 text-sm text-slate-600">
+                          <Award className="h-3 w-3" />
+                          {user.badges.length}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatDate(user.joined_at)}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openViewDialog(user)}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEditDialog(user)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(user._id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {filteredUsers.length > 0 && (
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs sm:text-sm text-slate-600">
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
                   Previous
                 </Button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)

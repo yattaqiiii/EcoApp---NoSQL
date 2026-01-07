@@ -10,6 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Pencil, Trash2, Search, Eye, Loader2 } from "lucide-react"
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api"
+import { WASTE_TYPES, FAKULTAS_LIST } from "@/lib/constants"
+import { usePagination } from "@/hooks/usePagination"
 
 export default function WasteLogsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -20,8 +23,6 @@ export default function WasteLogsPage() {
   const [wasteLogs, setWasteLogs] = useState([])
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
   const [formData, setFormData] = useState({
     user_id: "",
     waste_type: "",
@@ -29,9 +30,6 @@ export default function WasteLogsPage() {
     fakultas: "",
     lokasi_id: "",
   })
-
-  const wasteTypes = ["Organik", "Anorganik", "Botol Plastik", "Kertas", "Residu", "B3", "Tidak Ada Label"]
-  const fakultasList = ["FPTI", "FPMIPA", "FPEB", "FPBS", "FPIPS", "FPOK", "FIP", "FK", "FPSD"]
 
   // Fetch data
   useEffect(() => {
@@ -42,7 +40,7 @@ export default function WasteLogsPage() {
   const fetchWasteLogs = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("http://localhost:5000/api/admin/waste-logs")
+      const response = await fetch(getApiUrl(API_ENDPOINTS.WASTE_LOGS))
       const result = await response.json()
 
       if (result.success) {
@@ -57,7 +55,7 @@ export default function WasteLogsPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/users")
+      const response = await fetch(getApiUrl(API_ENDPOINTS.USERS))
       const result = await response.json()
 
       if (result.success) {
@@ -79,24 +77,12 @@ export default function WasteLogsPage() {
     return username.toLowerCase().includes(searchTerm.toLowerCase()) || log.waste_type?.toLowerCase().includes(searchTerm.toLowerCase()) || log.fakultas?.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Pagination
-  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentLogs = filteredLogs.slice(startIndex, endIndex)
-
-  const goToPage = page => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
-  }
-
-  // Reset to page 1 when search changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
+  // Use pagination hook
+  const { currentPage, totalPages, currentItems: currentLogs, goToPage, startIndex, endIndex } = usePagination(filteredLogs)
 
   const handleAdd = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/waste-logs", {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.WASTE_LOGS), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,7 +109,7 @@ export default function WasteLogsPage() {
 
   const handleEdit = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/waste-logs/${selectedLog._id}`, {
+      const response = await fetch(getApiUrl(`${API_ENDPOINTS.WASTE_LOGS}/${selectedLog._id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +138,7 @@ export default function WasteLogsPage() {
     if (!confirm("Are you sure you want to delete this log?")) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/waste-logs/${id}`, {
+      const response = await fetch(getApiUrl(`${API_ENDPOINTS.WASTE_LOGS}/${id}`), {
         method: "DELETE",
       })
 
@@ -215,14 +201,14 @@ export default function WasteLogsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-3 md:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Waste Logs</h1>
-          <p className="text-slate-600 mt-1">Manage waste scan history</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Waste Logs</h1>
+          <p className="text-sm md:text-base text-slate-600 mt-1">Manage waste scan history</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Add Log
         </Button>
@@ -230,8 +216,8 @@ export default function WasteLogsPage() {
 
       {/* Search & Filter */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
+        <CardContent className="pt-4 md:pt-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input placeholder="Search by username or waste type..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
@@ -242,80 +228,82 @@ export default function WasteLogsPage() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>All Waste Logs ({filteredLogs.length})</CardTitle>
+        <CardHeader className="px-4 md:px-6">
+          <CardTitle className="text-lg md:text-xl">All Waste Logs ({filteredLogs.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Waste Type</TableHead>
-                <TableHead>Confidence</TableHead>
-                <TableHead>Fakultas</TableHead>
-                <TableHead>Lokasi</TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+        <CardContent className="px-0 md:px-6 pb-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-600" />
-                    <p className="text-slate-500 mt-2">Loading waste logs...</p>
-                  </TableCell>
+                  <TableHead className="min-w-[120px]">User</TableHead>
+                  <TableHead className="min-w-[120px]">Waste Type</TableHead>
+                  <TableHead className="min-w-[100px]">Confidence</TableHead>
+                  <TableHead className="min-w-[100px]">XP Earned</TableHead>
+                  <TableHead className="min-w-[100px]">Fakultas</TableHead>
+                  <TableHead className="min-w-[150px]">Timestamp</TableHead>
+                  <TableHead className="text-right min-w-[110px]">Actions</TableHead>
                 </TableRow>
-              ) : filteredLogs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-slate-500">
-                    No logs found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentLogs.map(log => (
-                  <TableRow key={log._id}>
-                    <TableCell className="font-medium">{getUsernameById(log.user_id)}</TableCell>
-                    <TableCell>
-                      <Badge className={getWasteTypeBadgeColor(log.waste_type)}>{log.waste_type}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium text-green-600">{log.confidence > 1 ? log.confidence.toFixed(1) : (log.confidence * 100).toFixed(1)}%</span>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-600">{log.fakultas}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{log.lokasi_id}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{formatDate(log.timestamp)}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openViewDialog(log)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(log)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(log._id)}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-600" />
+                      <p className="text-slate-500 mt-2">Loading waste logs...</p>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-slate-500">
+                      No logs found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  currentLogs.map(log => (
+                    <TableRow key={log._id}>
+                      <TableCell className="font-medium">{getUsernameById(log.user_id)}</TableCell>
+                      <TableCell>
+                        <Badge className={getWasteTypeBadgeColor(log.waste_type)}>{log.waste_type}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium text-green-600">{log.confidence > 1 ? log.confidence.toFixed(1) : (log.confidence * 100).toFixed(1)}%</span>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">{log.fakultas}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{log.lokasi_id}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatDate(log.timestamp)}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openViewDialog(log)}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEditDialog(log)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(log._id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {filteredLogs.length > 0 && (
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs sm:text-sm text-slate-600">
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredLogs.length)} of {filteredLogs.length} logs
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
                   Previous
                 </Button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -371,7 +359,7 @@ export default function WasteLogsPage() {
                   <SelectValue placeholder="Select waste type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {wasteTypes.map(type => (
+                  {WASTE_TYPES.map(type => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
@@ -390,7 +378,7 @@ export default function WasteLogsPage() {
                   <SelectValue placeholder="Select fakultas" />
                 </SelectTrigger>
                 <SelectContent>
-                  {fakultasList.map(fak => (
+                  {FAKULTAS_LIST.map(fak => (
                     <SelectItem key={fak} value={fak}>
                       {fak}
                     </SelectItem>
@@ -444,7 +432,7 @@ export default function WasteLogsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {wasteTypes.map(type => (
+                  {WASTE_TYPES.map(type => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
@@ -463,7 +451,7 @@ export default function WasteLogsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {fakultasList.map(fak => (
+                  {FAKULTAS_LIST.map(fak => (
                     <SelectItem key={fak} value={fak}>
                       {fak}
                     </SelectItem>
